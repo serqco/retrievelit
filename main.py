@@ -2,6 +2,7 @@ import json
 import logging
 import argparse
 import os
+import sys
 
 import log_config
 import setup
@@ -100,9 +101,6 @@ def delete_files(files):
     logger.info('Finished deleting files.')
     
 
-
-
-
 def main(args):
     logger.debug(f'Configuration: {vars(args)}')
     target = args.target
@@ -133,5 +131,9 @@ if __name__ == '__main__':
     # get cli arguments
     parser = create_parser()
     args = parser.parse_args()
-    main(args)
+    try:
+        main(args)
+    except KeyboardInterrupt:
+        logger.error('Manual interruption - cancelling.')
+        sys.exit(1)
     
