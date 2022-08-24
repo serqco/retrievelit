@@ -37,23 +37,23 @@ def load_state(state_file):
 def update_state(state, state_file):
     # no need to update current state object, since we will only
     # read the previous steps' state if we rerun the whole program
-    logger.info('Updating state file.')
+    logger.debug('Updating state file.')
     with open(state_file, 'w') as f:
         f.write(json.dumps(state))
 
 def download_metadata(state, target, metadata_file, state_file):
     def get_venue():
-        target = target.split('-')[0]
-        logger.debug(f'Target venue {target} read from input.')
-        return venues.VENUES[target]
+        venue = target.split('-')[0]
+        logger.debug(f'Target venue {venue} read from input.')
+        return venues.VENUES[venue]
     def get_year():
         year = target.split('-')[1]
         logger.debug(f'Target year {year} read from input.')
         return year
 
     if not state.get('metadata_download'):
-        venue = get_venue(target)
-        year = get_year(target)
+        venue = get_venue()
+        year = get_year()
         dblp.download_metadata(venue, year, metadata_file)
         logger.info('Done downloading metadata.')
         state['metadata_download'] = True
