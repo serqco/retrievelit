@@ -36,10 +36,18 @@ def rewrite_doi_url(response, doi):
 
 def get_pdf_url(response):
     # computer.org uses JS to populate website, so we need to get PDF URL from the URL itself
-    if 'computer.org' in response.url:
-        ids = response.url.split('/journal/')[1]
-        #TODO this only works for TSE atm, since the venue isn't part of the original URL
-        url = f'https://www.computer.org/csdl/api/v1/periodical/trans/{ids}/download-article/pdf'
+    response_url = response.url
+    if 'computer.org' in response_url:
+        # TODO try to make flexible for different venues
+        # Transactions on Software Engineering (TSE)
+        if 'journal/ts' in response_url:
+            ids = response_url.split('/journal/')[1]
+            #TODO this only works for TSE atm, since the venue isn't part of the original URL
+            url = f'https://www.computer.org/csdl/api/v1/periodical/trans/{ids}/download-article/pdf'
+        # International Conference on Software Engineering (ICSE)
+        elif 'proceedings-article/icse' in response_url:
+            ids = response_url.split('/')[-1]
+            url = f"https://www.computer.org/csdl/pds/api/csdl/proceedings/download-article/{ids}/pdf"
         logger.debug(f'Built URL {url} for computer.org PDF download.')
         return url
     # for other URLs (Springer, ACM, etc.) parse HTML
