@@ -19,7 +19,9 @@ def build_bibtex(data):
         }
         fields = ['title', 'venue', 'volume', 'number']
         for field in fields:
-            entry[field] = publication[field]
+            # volume and number are None for conferences
+            if publication.get(field):
+                entry[field] = publication[field]
         logger.debug(f'Built bibtex entry: {entry}')
         bibtex.append(entry)
     bibtex_db = bibtexparser.bibdatabase.BibDatabase()
