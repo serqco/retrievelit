@@ -16,7 +16,7 @@ VENUES = {
     },
     'IST': {
         'name': 'Information and Software Technology',
-        'acronym': 'ist',
+        'acronym': 'infsof',
         'type': 'journal',
         'type_url': 'journals',
     },
