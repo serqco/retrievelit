@@ -104,8 +104,6 @@ def unify_data_format(data):
         elif isinstance(author, dict):
             # create list with 1 element here to get rid of this check in the next steps
             entry['authors'] = [author['text'].strip(strip_values)]
-        
-        entry['bibtext'] = False
         entry['pdf'] = False
 
         logger.debug(f'created entry: {entry}')

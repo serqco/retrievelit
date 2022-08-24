@@ -20,7 +20,6 @@ def create_folder(name):
 def create_state_file(state_file):
     contents = {
         'metadata_download': False,
-        'doi_rewrite': False,
         'identifier': False,
         'bibtex': False,
         'pdf': False,
