@@ -38,4 +38,5 @@ def generate_bibtex(metadata_file, bibtex_file):
     save_to_file(bibtex_data, bibtex_file)
     
 if __name__ == '__main__':
-    generate_bibtex()
+    # generate_bibtex()
+    logger.error('Not a standalone file. Please run the main script instead.')

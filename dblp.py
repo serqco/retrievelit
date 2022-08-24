@@ -90,7 +90,6 @@ def unify_data_format(data):
         # create list of author names
         authors = publication.get('authors')
         if not authors:
-            #TODO LOGGING WARNING
             logger.warning(f"Dropped entry without author: {publication}")
             continue
 
@@ -127,12 +126,6 @@ def download_metadata(venue, year, metadata_file):
     utils.save_metadata(metadata_file, unified_data)
 
 if __name__ == '__main__':
-    # type can be journal or conference
-    venue = {
-        'name': 'empirical software engineering',
-        'acronym': 'ese',
-        'type': 'journal',
-        'type_url': 'journals',
-    }
     # TODO function that adds the venue type in url format to the object
-    download_metadata(venue, '2021')
+    # download_metadata(venue, '2021')
+    logger.error('Not a standalone file. Please run the main script instead.')

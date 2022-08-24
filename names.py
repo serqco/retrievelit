@@ -54,11 +54,10 @@ def generate_name(article, existing_names):
         if full_name not in existing_names:
             logger.debug(f"generated name: {full_name}")
             return full_name
-    #TODO better exception
+    #TODO better exception + logging
     raise Exception("Couldn't find free name!")
 
 def add_identifiers(metadata_file):
-    #TODO log
     # download_stopwords()
     logger.info('Loading existing folders into namespace.')
     existing_names = load_existing_names()
@@ -80,5 +79,5 @@ def add_identifiers(metadata_file):
     logger.info(f'Identifiers saved to file {metadata_file}')
 
 if __name__ == '__main__':
-    add_identifiers('metadata.json')
-    
+    # add_identifiers('metadata.json')
+    logger.error('Not a standalone file. Please run the main script instead.')

@@ -17,7 +17,6 @@ logging.getLogger('urllib3').setLevel(logging.ERROR)
 logger = logging.getLogger(__name__)
 
 def create_parser():
-    #TODO add proper description
     parser = argparse.ArgumentParser(description="Downloads metadata and publication PDFs of a specified venue-volume combination. See README.md for more information.")
 
     parser.add_argument('target', help="the venue-volume combination to be downloaded e. g. 'ESE-2021'")

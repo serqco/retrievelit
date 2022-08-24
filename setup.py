@@ -28,6 +28,7 @@ def create_state_file(state_file):
         f.write(json.dumps(contents))
     logger.info(f'Created new state file {state_file}')
 
+#TODO rename function
 def main(name, state_file):
     logger.info('Setting up folder and state structure.')
     # need different behaviour if the exists or not (error vs create state file)
@@ -48,4 +49,4 @@ def main(name, state_file):
 
 
 if __name__ == '__main__':
-    pass
+    logger.error('Not a standalone file. Please run the main script instead.')

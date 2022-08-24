@@ -97,4 +97,5 @@ def download_pdfs(metadata_file, do_doi_rewrite, folder_name):
 
 
 if __name__ == '__main__':
-    download_pdfs()
+    # download_pdfs()
+    logger.error('Not a standalone file. Please run the main script instead.')

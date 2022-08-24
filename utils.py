@@ -3,6 +3,7 @@ import json
 
 logger = logging.getLogger(__name__)
 
+#TODO add exceptions
 def load_metadata(file):
     logger.debug(f'Loading metadata from file {file}')
     with open(file, 'r') as f:
