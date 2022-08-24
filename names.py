@@ -2,18 +2,26 @@ import json
 import os
 import nltk
 import logging
-from nltk.corpus import stopwords
+# from nltk.corpus import stopwords
 
 import utils
 
 logger = logging.getLogger(__name__)
 
-def download_stopwords():
-    #TODO install in retrievelit dir, not download one
-    #TODO maybe just add the english.txt file to git (make sure this is legally okay)
-    # download  english stopwords to location of this script
-    current_dir = os.path.dirname(os.path.abspath(__file__))
-    nltk.download('stopwords', download_dir=current_dir)
+# def download_stopwords():
+#     #TODO install in retrievelit dir, not download one
+#     # download  english stopwords to location of this script
+#     current_dir = os.path.dirname(os.path.abspath(__file__))
+#     nltk.download('stopwords', download_dir=current_dir)
+
+def load_stopwords():
+    logger.debug('Loading stopwords.')
+    with open('stopwords.txt', 'r') as f:
+        stopwords_string = f.read()
+    stopwords = stopwords_string.split('\n')
+    logger.debug(f'Loaded stopwords {stopwords}.')
+    return stopwords
+
 
 def get_list_names(list_string):
     names = list_string.split('\n')
@@ -48,7 +56,7 @@ def load_existing_names(existing_folders):
     logger.debug('Finished loading existing names.')
     return existing_names
 
-def generate_name(article, existing_names):
+def generate_name(article, existing_names, stopwords):
     """
     """
     # assume surnames such as "van Klaassen" should lead to output "Kla",
@@ -70,7 +78,7 @@ def generate_name(article, existing_names):
     # titles such as "FACER: An API..." should lead to output "facer" (without ":")
     # while still keeping non-latin chars, so we strip of punctuation
     title = [e.lower() for e in article['title'].split()]
-    title_no_stopwords = [e for e in title if e not in stopwords.words('english')]
+    title_no_stopwords = [e for e in title if e not in stopwords]
     title_part = title_no_stopwords[0].strip(":;,.#@%^&*()-_+=!?<>/\\{}[]")
 
     appendices = [''] + [chr(i) for i in range(97,123)]
@@ -85,13 +93,13 @@ def generate_name(article, existing_names):
     raise Exception("Couldn't find free name!")
 
 def add_identifiers(metadata_file, existing_folders):
-    # download_stopwords()
+    stopwords = load_stopwords()
     logger.info('Loading existing folders into namespace.')
     existing_names = load_existing_names(existing_folders)
     publications = utils.load_metadata(metadata_file)
     logger.info('Generating identifiers for publications.')
     for e in publications:
-        generated_name = generate_name(e, existing_names)
+        generated_name = generate_name(e, existing_names, stopwords)
         e['identifier'] = generated_name
         existing_names.append(generated_name)
     logger.info('Identifiers generated.')
