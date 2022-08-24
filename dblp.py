@@ -1,17 +1,24 @@
 from bs4 import BeautifulSoup
-from pprint import pprint
 import requests
 import re
 import json
 import logging
+import sys
 
 import utils
 
 logger = logging.getLogger(__name__)
 
 BASE_URL = 'https://dblp.org/db/'
+API_BASE_URL = 'https://dblp.org/search/publ/api?q=toc:db/'
 
 # EXAMPLE_TOKEN = "toc:db/journals/ese/ese26.bht:"
+
+def is_conference(venue):
+    return venue['type'] == 'conference'
+
+def is_journal(venue):
+    return venue['type'] == 'journal'
 
 def build_venue_url(venue):
     """
@@ -64,7 +71,7 @@ def build_volume_url(venue, volume_number):
     acronym = venue['acronym']
     result_number = 1000
     result_format = 'json'
-    url = f"https://dblp.org/search/publ/api?q=toc:db/{venue_type}/{acronym}/{acronym}{volume_number}.bht:&h={result_number}&format={result_format}"
+    url = f"{API_BASE_URL}{venue_type}/{acronym}/{acronym}{volume_number}.bht:&h={result_number}&format={result_format}"
     logger.debug(f'Built volume url: {url}')
     return url
 
@@ -85,7 +92,8 @@ def unify_data_format(data):
 
         keys = ['title', 'venue', 'volume', 'number', 'year', 'doi']
         #TODO if venue name is different for each metadata source, this needs to come from venues.py
-        entry = {key: publication[key] for key in keys}
+        # only journals have volume and number fields
+        entry = {key: publication.get(key) for key in keys}
         
         # create list of author names
         authors = publication.get('authors')
@@ -110,14 +118,18 @@ def unify_data_format(data):
     return result
 
 
-# r = requests.get("https://dblp.org/db/journals/ese/ese26.html")
-
 def download_metadata(venue, year, metadata_file):
     logger.info(f'Downloading metadata.')
     logger.debug(f'venue: {venue}')
     logger.debug(f'year: {year}')
-    venue_url = build_venue_url(venue)
-    volume_number = get_volume_number(venue_url, year)
+    if is_conference(venue):
+        volume_number = year
+    elif is_journal(venue):
+        venue_url = build_venue_url(venue)
+        volume_number = get_volume_number(venue_url, year)
+    else:
+        logger.error(f"Couldn't determine type of venue {venue}. Review venues.py file and try again.")
+        sys.exit(1)
     volume_url = build_volume_url(venue, volume_number)
     data = get_volume_data(volume_url)
     logger.info('Metadata received.')
