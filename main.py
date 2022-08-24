@@ -1,6 +1,7 @@
 import json
 import logging
 import argparse
+import os
 
 import log_config
 import setup
@@ -39,6 +40,7 @@ def update_state(state, state_file):
     logger.debug('Updating state file.')
     with open(state_file, 'w') as f:
         f.write(json.dumps(state))
+    logger.debug('Finished saving state.')
 
 def download_metadata(state, target, metadata_file, state_file):
     def get_venue():
@@ -60,9 +62,9 @@ def download_metadata(state, target, metadata_file, state_file):
     else:
         logger.info('Metadata already downloaded. Skipping.')
 
-def add_identifiers(state, metadata_file, state_file):
+def add_identifiers(state, metadata_file, state_file, existing_folders):
     if not state.get('identifier'):
-        names.add_identifiers(metadata_file)
+        names.add_identifiers(metadata_file, existing_folders)
         logger.info('Done adding identifiers.')
         state['identifier'] = True
         update_state(state, state_file)
@@ -78,24 +80,39 @@ def generate_bibtex(state, metadata_file, bibtex_file, state_file):
     else:
         logger.info('Bibtex file already built. Skipping.')
 
-def download_pdfs(state, metadata_file, do_doi_rewrite, folder_name, state_file):
+def download_pdfs(state, metadata_file, do_doi_rewrite, folder_name, state_file, list_file):
     if not state.get('pdf'):
-        pdf.download_pdfs(metadata_file, do_doi_rewrite, folder_name)
+        pdf.download_pdfs(metadata_file, do_doi_rewrite, folder_name, list_file)
         logger.info('Done downloading PDFs.')
         state['pdf'] = True
         update_state(state, state_file)
     else:
         logger.info('PDFs already downloaded. Skipping.')
 
+def delete_files(files):
+    logger.info('Deleting intermediate files.')
+    for f in files:
+        try:
+            os.remove(f)
+            logger.debug(f'Deleted file {f}.')
+        except FileNotFoundError:
+            logger.warn(f'Could not find file {f} for deletion.')
+    logger.info('Finished deleting files.')
+    
+
+
+
 
 def main(args):
     logger.debug(f'Configuration: {vars(args)}')
     target = args.target
     metadata_source = args.metadata
+    existing_folders = args.existing_folders
 
     state_file = f'{target}_state.json'
     metadata_file = f'{target}_metadata.json'
     bibtex_file = f'{target}-{metadata_source}.bib'
+    list_file = f'{target}.list'
 
      # setup folder and state file
      # TODO folder name should contain metadata source if not dblp
@@ -105,10 +122,11 @@ def main(args):
     state = load_state(state_file)
     # TODO refactor as not to pass so many arguments everywhere
     download_metadata(state, target, metadata_file, state_file)
-    add_identifiers(state, metadata_file, state_file)
+    add_identifiers(state, metadata_file, state_file, existing_folders)
     generate_bibtex(state, metadata_file, bibtex_file, state_file)
-    download_pdfs(state, metadata_file, args.ieeecs, target, state_file)
-    # cleanup (delete json files etc.)
+    download_pdfs(state, metadata_file, args.ieeecs, target, state_file, list_file)
+    delete_files([metadata_file, state_file])
+    logger.info('Exiting.')
 
 
 if __name__ == '__main__':
