@@ -4,6 +4,8 @@ import nltk
 import logging
 from nltk.corpus import stopwords
 
+import utils
+
 logger = logging.getLogger(__name__)
 
 def download_stopwords():
@@ -13,14 +15,37 @@ def download_stopwords():
     current_dir = os.path.dirname(os.path.abspath(__file__))
     nltk.download('stopwords', download_dir=current_dir)
 
-def load_existing_names():
-    #TODO implement loading names from multiple directories
-        # get all .list files with prefix of provided args
-            # (we can use the .list file with pdf names since we only want to use correctly downloaded directories anyways, if file not found -> something went wrong)
-        # parse out all identifiers
-            # TODO -> is this the best source for these? (is this stable?)
-    # ignore if name list exists in this directory?
-    existing_names = ['AbiShaBas21-facer', 'AbiShaBas21a-facer', 'AbiShaBas21b-facer']
+def get_list_names(list_string):
+    names = list_string.split('\n')
+    # get identifier from path if not empty string (last new line)
+    list_names = [e.split('/')[1][:-4] for e in names if e]
+    logger.debug(f'Loaded names {list_names}')
+    return list_names
+
+def load_existing_names(existing_folders):
+    # No need to load names for this venue-volume target,
+    # since names are generated in one step, so if we get to here,
+    # we want to regenerate all names anyways.
+    logger.debug('Loading existing names.')
+
+    existing_names = []
+    list_files = [f'{folder}.list' for folder in existing_folders]
+
+    for list_file in list_files:
+        logger.debug(f'Reading names from file {list_file}')
+
+        try:
+            with open(list_file, 'r') as f:
+                list_string = f.read()
+        except FileNotFoundError:
+            logger.warn(f'File {list_file} not found. Skipping.')
+            continue
+
+        list_names = get_list_names(list_string)
+        existing_names.append(list_names)
+        logger.debug(f'Loaded names from file {list_file}.')
+
+    logger.debug('Finished loading existing names.')
     return existing_names
 
 def generate_name(article, existing_names):
@@ -51,32 +76,26 @@ def generate_name(article, existing_names):
     appendices = [''] + [chr(i) for i in range(97,123)]
     for e in appendices:
         full_name = f"{author_part}{year_part}{e}-{title_part}"
+        logger.debug(f'Checking name {full_name} for uniqueness.')
         if full_name not in existing_names:
-            logger.debug(f"generated name: {full_name}")
+            logger.debug("Name is unique.")
             return full_name
+        logger.debug('Name not unique. Trying new name.')
     #TODO better exception + logging
     raise Exception("Couldn't find free name!")
 
-def add_identifiers(metadata_file):
+def add_identifiers(metadata_file, existing_folders):
     # download_stopwords()
     logger.info('Loading existing folders into namespace.')
-    existing_names = load_existing_names()
-    logger.info('Reading metadata file.')
-        #TODO put write in function
-    with open(metadata_file, 'r') as f:
-        #TODO file not found
-        publications = json.loads(f.read())
-    logger.info('Metadata loaded.')
+    existing_names = load_existing_names(existing_folders)
+    publications = utils.load_metadata(metadata_file)
     logger.info('Generating identifiers for publications.')
     for e in publications:
         generated_name = generate_name(e, existing_names)
         e['identifier'] = generated_name
         existing_names.append(generated_name)
     logger.info('Identifiers generated.')
-    logger.info('Saving to metadata file.')
-    with open(metadata_file, 'w') as f:
-        f.write(json.dumps(publications))
-    logger.info(f'Identifiers saved to file {metadata_file}')
+    utils.save_metadata(metadata_file, publications)
 
 if __name__ == '__main__':
     # add_identifiers('metadata.json')
