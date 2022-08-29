@@ -14,36 +14,32 @@ API_BASE_URL = 'https://dblp.org/search/publ/api?q=toc:db/'
 
 # EXAMPLE_TOKEN = "toc:db/journals/ese/ese26.bht:"
 
+# mds = metadata-source
+def veryify_mds_config(venue):
+    try:
+        mds_config = venue['metadata_sources']['dblp']
+        venue_type = mds_config['type']
+        acronym = mds_config['acronym']
+        if not venue_type: raise ValueError('\'type\'')
+        if not acronym: raise ValueError('\'acronym\'')
+    except (KeyError, ValueError) as e:
+        logger.error(f"Value missing from venues.py: {str(e)}. Please make sure the configuration adheres to the expected format, or try another metadata-source.")
+        sys.exit(1)
+
+def load_mds_config(venue):
+    metadata_config = venue['metadata_sources']['dblp']
+    return metadata_config
+
 def is_conference(venue):
     return venue['type'] == 'conference'
 
 def is_journal(venue):
     return venue['type'] == 'journal'
 
-def build_venue_url(venue):
-    """
-    
-    """
-    url = f"{BASE_URL}{venue['type_url']}/{venue['acronym']}"
+def build_venue_url(dblp_config):
+    url = f"{BASE_URL}{dblp_config['type']}/{dblp_config['acronym']}"
     logger.debug(f'Built URL: {url}')
     return url
-
-# query venue api for specific venue
-#TODO finish
-def find_venue(venue):
-    """
-    
-    """
-    
-    API_URL = 'https://dblp.org/search/venue/api'
-
-    name_query_string = '+'.join(venue.get('name').split())
-    url_params = {
-        'format': 'json',
-        'q': name_query_string,
-    }
-    r = requests.get(API_URL, params=url_params)
-    print(r.text)
 
 def get_volume_number(venue_url, year):
     """
@@ -63,12 +59,12 @@ def get_volume_number(venue_url, year):
     logger.debug(f'Extracted volume number {volume_number}')
     return volume_number
 
-def build_volume_url(venue, volume_number):
+def build_volume_url(dblp_config, volume_number):
     """
 
     """
-    venue_type = venue['type_url']
-    acronym = venue['acronym']
+    venue_type = dblp_config['type']
+    acronym = dblp_config['acronym']
     result_number = 1000
     result_format = 'json'
     url = f"{API_BASE_URL}{venue_type}/{acronym}/{acronym}{volume_number}.bht:&h={result_number}&format={result_format}"
@@ -122,15 +118,20 @@ def download_metadata(venue, year, metadata_file):
     logger.info(f'Downloading metadata.')
     logger.debug(f'venue: {venue}')
     logger.debug(f'year: {year}')
+    veryify_mds_config(venue)
+    # mds = metadata-source
+    mds_config = load_mds_config(venue)
     if is_conference(venue):
         volume_number = year
     elif is_journal(venue):
-        venue_url = build_venue_url(venue)
+        # TODO make sure this exists, probably check for all
+        # fields in loading function, once determined which are needed
+        venue_url = build_venue_url(mds_config)
         volume_number = get_volume_number(venue_url, year)
     else:
         logger.error(f"Couldn't determine type of venue {venue}. Review venues.py file and try again.")
         sys.exit(1)
-    volume_url = build_volume_url(venue, volume_number)
+    volume_url = build_volume_url(mds_config, volume_number)
     data = get_volume_data(volume_url)
     logger.info('Metadata received.')
     logger.info('Rewriting data in uniform format.')

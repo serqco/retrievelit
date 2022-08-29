@@ -4,32 +4,52 @@
 VENUES = {
     'EMSE': {
         'name': 'empirical software engineering',
-        'acronym': 'ese',
         'type': 'journal',
-        'type_url': 'journals',
+        'metadata_sources': {
+            'dblp': {
+                'type': 'journals',
+                'acronym': 'ese'
+            },
+        },
     },
     'ICSE': {
         'name': 'International Conference on Software Engineering',
-        'acronym': 'icse',
         'type': 'conference',
-        'type_url': 'conf',
+        'metadata_sources': {
+            'dblp': {
+                'type': 'conf',
+                'acronym': 'icse'
+            },
+        },
     },
     'IST': {
         'name': 'Information and Software Technology',
-        'acronym': 'infsof',
         'type': 'journal',
-        'type_url': 'journals',
+        'metadata_sources': {
+            'dblp': {
+                'type': 'journals',
+                'acronym': 'infsof'
+            },
+        },
     },
     'TOSEM': {
         'name': 'ACM Transactions on Software Engineering and Methodology',
-        'acronym': 'tosem',
         'type': 'journal',
-        'type_url': 'journals',  
+        'metadata_sources': {
+            'dblp': {
+                'type': 'journals',
+                'acronym': 'tosem'
+            },
+        },
     },
     'TSE': {
         'name': 'IEEE Transactions on Software Engineering',
-        'acronym': 'tse',
         'type': 'journal',
-        'type_url': 'journals'  
+        'metadata_sources': {
+            'dblp': {
+                'type': 'journals',
+                'acronym': 'tse'
+            },
+        },
     }
 }
