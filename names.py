@@ -8,12 +8,6 @@ import utils
 
 logger = logging.getLogger(__name__)
 
-# def download_stopwords():
-#     #TODO install in retrievelit dir, not download one
-#     # download  english stopwords to location of this script
-#     current_dir = os.path.dirname(os.path.abspath(__file__))
-#     nltk.download('stopwords', download_dir=current_dir)
-
 def load_stopwords():
     logger.debug('Loading stopwords.')
     with open('stopwords.txt', 'r') as f:

@@ -45,9 +45,14 @@ def update_state(state, state_file):
 
 def download_metadata(state, target, metadata_file, state_file):
     def get_venue():
-        venue = target.split('-')[0]
-        logger.debug(f'Target venue {venue} read from input.')
-        return venues.VENUES[venue]
+        venue_string = target.split('-')[0]
+        logger.debug(f'Target venue-string {venue_string} read from input.')
+        try:
+            venue = venues.VENUES[venue_string]
+        except KeyError:
+            logger.error(f"No venue found matching {venue_string}. Please check your spelling or edit 'venues.py' if it should exist.")
+            sys.exit(1)
+        return venue
     def get_year():
         year = target.split('-')[1]
         logger.debug(f'Target year {year} read from input.')

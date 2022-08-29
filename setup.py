@@ -38,7 +38,6 @@ def main(name, state_file):
             logger.error('No state file found.')
             #TODO better exception/create custom/better hints
             # -> either target is fully downloaded or no steps were completed
-            # TODO add CLI option to force restart of a existing target folder (delete contents and start from zero)
             raise Exception('no state file found. Force full restart of this download with flag.')
         logger.info('State file found, resuming state.')
     else:
