@@ -1,16 +1,16 @@
-from bs4 import BeautifulSoup
 import requests
 import re
 import json
 import logging
 import sys
+import time
 
 import utils
 
 logger = logging.getLogger(__name__)
 
 BASE_URL = 'https://dblp.org/db/'
-API_BASE_URL = 'https://dblp.org/search/publ/api?q=toc:db/'
+API_BASE_URL = 'https://dblp.org/search/publ/api?q='
 
 # EXAMPLE_TOKEN = "toc:db/journals/ese/ese26.bht:"
 
@@ -30,60 +30,63 @@ def load_mds_config(venue):
     metadata_config = venue['metadata_sources']['dblp']
     return metadata_config
 
-def is_conference(venue):
-    return venue['type'] == 'conference'
 
-def is_journal(venue):
-    return venue['type'] == 'journal'
 
-def build_venue_url(dblp_config):
-    url = f"{BASE_URL}{dblp_config['type']}/{dblp_config['acronym']}"
-    logger.debug(f'Built URL: {url}')
-    return url
-
-def get_volume_number(venue_url, year):
-    """
+def get_data_for_year(mds_config, year):
+    url = 'https://dblp.org/search/publ/api?q=stream:streams/journals/ese:&h=1000&format=json'
+    venue_type = mds_config['type']
+    acronym = mds_config['acronym']
+    offset = 0
+    received = 0
+    entries = []
+    while True:
+        url = f"{API_BASE_URL}stream:streams/{venue_type}/{acronym}:&h=1000&f={offset}&format=json"
+        data = get_data(url)
+        hits = data['result']['hits']
+        received += int(hits['@sent'])
+        total = int(hits['@total'])
+        logger.debug(f"Received {received} entries. Amount in collection: {total}.")
+        entries.extend(hits['hit'])
+        if received >= total:
+            logger.debug(f"Received all entries.")
+            break
+        logger.debug(f"{total - received} entries left. Getting next batch.")
+        offset += 1000
+        time.sleep(1)
+        
+    logger.debug(f"{len(entries)} entries received from publ API.")
+    logger.debug("Filtering out entries from other years.")
+    year_entries = [e for e in entries if e['info']['year'] == year]
+    logger.debug(f"{len(year_entries)} entries found for year {year}.")
+    return year_entries
     
-    """
-    #TODO multiple volumes for one year?
-    logger.debug('Searching for volume number.')
-    logger.debug(f'Venue url: {venue_url}')
-    logger.debug(f'Year: {year}')
-    r = requests.get(venue_url)
-    soup = BeautifulSoup(r.text, 'html.parser')
-    # find "Volume" and "2021" in <a> tag
-    tag = soup.find('a', string=re.compile(f'Volume.*{year}'))
-    logger.debug(f'Volume number html tag: {tag}')
-    # print(tag.text)
-    volume_number = tag.text.split('Volume ')[1].split(',')[0]
-    logger.debug(f'Extracted volume number {volume_number}')
-    return volume_number
-
-def build_volume_url(dblp_config, volume_number):
-    """
-
-    """
-    venue_type = dblp_config['type']
-    acronym = dblp_config['acronym']
-    result_number = 1000
-    result_format = 'json'
-    url = f"{API_BASE_URL}{venue_type}/{acronym}/{acronym}{volume_number}.bht:&h={result_number}&format={result_format}"
+def build_volume_url(mds_config, volume_number):
+    venue_type = mds_config['type']
+    acronym = mds_config['acronym']
+    url = f"{API_BASE_URL}toc:db/{venue_type}/{acronym}/{acronym}{volume_number}.bht:&h=1000&format=json"
     logger.debug(f'Built volume url: {url}')
     return url
 
-def get_volume_data(url):
-    """
-    
-    """
+def get_data(url):
+    logger.debug(f'GET request to {url}')
     r = requests.get(url)
+    logger.debug(f'Reponse code: {r.status_code}')
+    r.raise_for_status()
     return r.json()
 
-def unify_data_format(data):
+def get_data_for_volume(mds_config, volume):
+    volume_url = build_volume_url(mds_config, volume)
+    data = get_data(volume_url)
+    entries = data['result']['hits']['hit']
+    logger.debug(f"Received {len(entries)} entries for volume {volume}.")
+    return entries
+
+def unify_data_format(hits):
     """
     
     """
     result = []
-    for publication in data['result']['hits']['hit']:
+    for publication in hits:
         publication = publication['info']
 
         keys = ['title', 'venue', 'volume', 'number', 'year', 'doi']
@@ -114,31 +117,25 @@ def unify_data_format(data):
     return result
 
 
-def download_metadata(venue, year, metadata_file):
+def download_metadata(venue, number, grouping, metadata_file):
     logger.info(f'Downloading metadata.')
     logger.debug(f'venue: {venue}')
-    logger.debug(f'year: {year}')
+    logger.debug(f'year or volume: {number}')
+    logger.debug(f'grouping: {grouping}')
+    
     veryify_mds_config(venue)
     # mds = metadata-source
     mds_config = load_mds_config(venue)
-    if is_conference(venue):
-        volume_number = year
-    elif is_journal(venue):
-        # TODO make sure this exists, probably check for all
-        # fields in loading function, once determined which are needed
-        venue_url = build_venue_url(mds_config)
-        volume_number = get_volume_number(venue_url, year)
-    else:
-        logger.error(f"Couldn't determine type of venue {venue}. Review venues.py file and try again.")
-        sys.exit(1)
-    volume_url = build_volume_url(mds_config, volume_number)
-    data = get_volume_data(volume_url)
+    if grouping == 'year':
+        data = get_data_for_year(mds_config, number)
+    if grouping == 'volume':
+        data = get_data_for_volume(mds_config, number)
+
     logger.info('Metadata received.')
     logger.info('Rewriting data in uniform format.')
     unified_data = unify_data_format(data)
     utils.save_metadata(metadata_file, unified_data)
 
 if __name__ == '__main__':
-    # TODO function that adds the venue type in url format to the object
     # download_metadata(venue, '2021')
     logger.error('Not a standalone file. Please run the main script instead.')

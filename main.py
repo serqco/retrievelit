@@ -24,8 +24,10 @@ def create_parser():
     parser.add_argument('target', help="the venue-volume combination to be downloaded e. g. 'ESE-2021'")
     parser.add_argument('existing_folders', nargs='*', help="existing folders in the current directory containing previous downloads, creating the namespace for the target's data")
 
+    grouping_options = ['year', 'volume']
+    parser.add_argument('--grouping', choices=grouping_options, default='year', help="wether the number after the target determines the year or volume of the choosen corpus. (default: %(default)s)")
     metadata_options = ['dblp', 'crossref']
-    parser.add_argument('--metadata', choices=metadata_options, default='dblp', help="the source for metadata and DOIs of the venue (default: %(default)s)")
+    parser.add_argument('--metadata', choices=metadata_options, default='dblp', help="the source for metadata and DOIs of the venue. (default: %(default)s)")
     parser.add_argument('--ieeecs', action='store_true', help="rewrite DOIs pointing to ieeexplore to computer.org instead")
     return parser
 
@@ -43,7 +45,7 @@ def update_state(state, state_file):
         f.write(json.dumps(state))
     logger.debug('Finished saving state.')
 
-def download_metadata(state, target, metadata_file, state_file):
+def download_metadata(state, target, grouping, metadata_file, state_file):
     def get_venue():
         venue_string = target.split('-')[0]
         logger.debug(f'Target venue-string {venue_string} read from input.')
@@ -53,15 +55,15 @@ def download_metadata(state, target, metadata_file, state_file):
             logger.error(f"No venue found matching {venue_string}. Please check your spelling or edit 'venues.py' if it should exist.")
             sys.exit(1)
         return venue
-    def get_year():
-        year = target.split('-')[1]
-        logger.debug(f'Target year {year} read from input.')
-        return year
+    def get_number():
+        value = target.split('-')[1]
+        logger.debug(f'Target year or volume {value} read from input.')
+        return value
 
     if not state.get('metadata_download'):
         venue = get_venue()
-        year = get_year()
-        dblp.download_metadata(venue, year, metadata_file)
+        number = get_number()
+        dblp.download_metadata(venue, number, grouping, metadata_file)
         logger.info('Done downloading metadata.')
         state['metadata_download'] = True
         update_state(state, state_file)
@@ -111,6 +113,8 @@ def main(args):
     target = args.target
     metadata_source = args.metadata
     existing_folders = args.existing_folders
+    do_doi_rewrite = args.ieeecs
+    grouping = args.grouping 
 
     state_file = f'{target}_state.json'
     metadata_file = f'{target}_metadata.json'
@@ -124,10 +128,10 @@ def main(args):
     # load state file
     state = load_state(state_file)
     # TODO refactor as not to pass so many arguments everywhere
-    download_metadata(state, target, metadata_file, state_file)
+    download_metadata(state, target, grouping, metadata_file, state_file)
     add_identifiers(state, metadata_file, state_file, existing_folders)
     generate_bibtex(state, metadata_file, bibtex_file, state_file)
-    download_pdfs(state, metadata_file, args.ieeecs, target, state_file, list_file)
+    download_pdfs(state, metadata_file, do_doi_rewrite, target, state_file, list_file)
     delete_files([metadata_file, state_file])
     logger.info('Exiting.')
 
