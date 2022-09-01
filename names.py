@@ -1,10 +1,8 @@
-import json
-import os
-import nltk
 import logging
-# from nltk.corpus import stopwords
 
 import utils
+
+# from nltk.corpus import stopwords
 
 logger = logging.getLogger(__name__)
 

@@ -1,9 +1,8 @@
-import bibtexparser
-import json
 import logging
 
-import utils
+import bibtexparser
 
+import utils
 
 logger = logging.getLogger(__name__)
 

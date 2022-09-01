@@ -1,11 +1,12 @@
-from bs4 import BeautifulSoup
-from tqdm import tqdm
-from requests.compat import urljoin
 import logging
-import requests
 import re
 import sys
 import time
+
+import requests
+from bs4 import BeautifulSoup
+from requests.compat import urljoin
+from tqdm import tqdm
 
 import utils
 

@@ -1,16 +1,15 @@
+import argparse
 import json
 import logging
-import argparse
 import os
 import sys
 
-import log_config
-import setup
-import dblp
-import venues
-import names
 import bibtex
+import dblp
+import names
 import pdf
+import setup
+import venues
 
 # disable logging from urllib3 library (used by requests)
 logging.getLogger('urllib3').setLevel(logging.ERROR)
