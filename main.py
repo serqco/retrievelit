@@ -96,7 +96,7 @@ def delete_files(files):
             os.remove(f)
             logger.debug(f'Deleted file {f}.')
         except FileNotFoundError:
-            logger.warn(f'Could not find file {f} for deletion.')
+            logger.warning(f'Could not find file {f} for deletion.')
     logger.info('Finished deleting files.')
     
 
@@ -122,7 +122,7 @@ def main(args):
     add_identifiers(state, metadata_file, state_file, existing_folders)
     generate_bibtex(state, metadata_file, bibtex_file, state_file)
     download_pdfs(state, metadata_file, args.ieeecs, target, state_file, list_file)
-    delete_files([metadata_file, state_file])
+    delete_files([state_file])
     logger.info('Exiting.')
 
 
