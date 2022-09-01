@@ -7,15 +7,13 @@ import sys
 import log_config
 import setup
 import downloader_pipeline
-
+import mapper_factory
 import dblp
 import venues
 import names
 import bibtex
 import pdf
 import doi
-
-from doi_pdf_mappers.acm import AcmMapper
 
 # disable logging from urllib3 library (used by requests)
 logging.getLogger('urllib3').setLevel(logging.ERROR)
@@ -31,9 +29,10 @@ def create_parser():
 
     grouping_options = ['year', 'volume']
     parser.add_argument('--grouping', choices=grouping_options, default='year', help="wether the number after the target determines the year or volume of the choosen corpus. (default: %(default)s)")
+    parser.add_argument('--mapper', default='HtmlParserMapper', help="the class in the 'doi_pdf_mappers' folder to use for retrieving the PDF URL from the DOI of a publication. (default: %(default)s). Check the 'doi_pdf_mappers' folder to see all possible mappers and the README.md on how to implement your own.")
     metadata_options = ['dblp', 'crossref']
     parser.add_argument('--metadata', choices=metadata_options, default='dblp', help="the source for metadata and DOIs of the venue. (default: %(default)s)")
-    parser.add_argument('--ieeecs', action='store_true', help="rewrite DOIs pointing to ieeexplore to computer.org instead")
+    parser.add_argument('--ieeecs', action='store_true', help="rewrite DOIs pointing to ieeexplore to computer.org instead. (default: %(default)s)")
     return parser
 
 def get_venue(target):
@@ -69,7 +68,8 @@ def main(args):
     metadata_source = args.metadata
     existing_folders = args.existing_folders
     do_doi_rewrite = args.ieeecs
-    grouping = args.grouping 
+    grouping = args.grouping
+    mapper_name = args.mapper
 
     state_file = f'{target}_state.json'
     metadata_file = 'metadata.json'
@@ -93,8 +93,7 @@ def main(args):
     pipeline.add_step(bibtex_builder)
     doi_resolver = doi.DoiResolver(do_doi_rewrite)
     pipeline.add_step(doi_resolver)
-    # TODO implement
-    mapper = AcmMapper()
+    mapper = mapper_factory.get_mapper(mapper_name)
     pdf_downloader = pdf.PdfDownloader(mapper, target, list_file)
     pipeline.add_step(pdf_downloader)
     

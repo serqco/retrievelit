@@ -1,0 +1,2 @@
+class PdfUrlNotFoundError(Exception):
+    pass
