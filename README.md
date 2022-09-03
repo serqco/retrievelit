@@ -25,12 +25,10 @@ retrievelit is written in Python.
 - usability improvements:
   - check arguments before using them
   - terminate with clear error messages (instead of crashing) upon unsuitable call arguments. 
-  - print no fractions of seconds for timestamps
   - I am no longer convinced that the title word in citation keys and PDF filenames is useful.
     (even once it works better and ignores stopwords)
     I suggest to leave it out by default and only add it if `--longname` is given.
 - tech debt reductions:
-  - VENUES: rename 'acronym' to 'dblp_acronym'
 - defects:
   - 2022-09-01: TSE-2021 crashed with "No such file or directory: 'TSE-2021/El-HieTür21-$\\mathcal.pdf'"  
     Only few non-letter characters should be let through for the title word, mostly dashes.  
