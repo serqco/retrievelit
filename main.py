@@ -6,11 +6,14 @@ import sys
 
 import log_config
 import setup
+import downloader_pipeline
+import mapper_factory
 import dblp
 import venues
 import names
 import bibtex
 import pdf
+import doi
 
 # disable logging from urllib3 library (used by requests)
 logging.getLogger('urllib3').setLevel(logging.ERROR)
@@ -26,77 +29,28 @@ def create_parser():
 
     grouping_options = ['year', 'volume']
     parser.add_argument('--grouping', choices=grouping_options, default='year', help="wether the number after the target determines the year or volume of the choosen corpus. (default: %(default)s)")
+    parser.add_argument('--mapper', default='HtmlParserMapper', help="the class in the 'doi_pdf_mappers' folder to use for retrieving the PDF URL from the DOI of a publication. (default: %(default)s). Check the 'doi_pdf_mappers' folder to see all possible mappers and the README.md on how to implement your own.")
     metadata_options = ['dblp', 'crossref']
     parser.add_argument('--metadata', choices=metadata_options, default='dblp', help="the source for metadata and DOIs of the venue. (default: %(default)s)")
-    parser.add_argument('--ieeecs', action='store_true', help="rewrite DOIs pointing to ieeexplore to computer.org instead")
+    parser.add_argument('--ieeecs', action='store_true', help="rewrite DOIs pointing to ieeexplore to computer.org instead. (default: %(default)s)")
     return parser
 
-def load_state(state_file):
-    logger.info('Loading state.')
-    with open(state_file, 'r') as f:
-        state = json.load(f)
-    return state
+def get_venue(target):
+    venue_string = target.split('-')[0]
+    logger.debug(f'Target venue-string {venue_string} read from input.')
+    try:
+        venue = venues.VENUES[venue_string]
+    except KeyError:
+        logger.error(f"No venue found matching {venue_string}. Please check your spelling or edit 'venues.py' if it should exist.")
+        sys.exit(1)
+    return venue
 
-def update_state(state, state_file):
-    # no need to update current state object, since we will only
-    # read the previous steps' state if we rerun the whole program
-    logger.debug('Updating state file.')
-    with open(state_file, 'w') as f:
-        f.write(json.dumps(state))
-    logger.debug('Finished saving state.')
+def get_number(target):
+    value = target.split('-')[1]
+    logger.debug(f'Target year or volume {value} read from input.')
+    return value
 
-def download_metadata(state, target, grouping, metadata_file, state_file):
-    def get_venue():
-        venue_string = target.split('-')[0]
-        logger.debug(f'Target venue-string {venue_string} read from input.')
-        try:
-            venue = venues.VENUES[venue_string]
-        except KeyError:
-            logger.error(f"No venue found matching {venue_string}. Please check your spelling or edit 'venues.py' if it should exist.")
-            sys.exit(1)
-        return venue
-    def get_number():
-        value = target.split('-')[1]
-        logger.debug(f'Target year or volume {value} read from input.')
-        return value
-
-    if not state.get('metadata_download'):
-        venue = get_venue()
-        number = get_number()
-        dblp.download_metadata(venue, number, grouping, metadata_file)
-        logger.info('Done downloading metadata.')
-        state['metadata_download'] = True
-        update_state(state, state_file)
-    else:
-        logger.info('Metadata already downloaded. Skipping.')
-
-def add_identifiers(state, metadata_file, state_file, existing_folders):
-    if not state.get('identifier'):
-        names.add_identifiers(metadata_file, existing_folders)
-        logger.info('Done adding identifiers.')
-        state['identifier'] = True
-        update_state(state, state_file)
-    else:
-        logger.info('Identifiers already added. Skipping.')
-
-def generate_bibtex(state, metadata_file, bibtex_file, state_file):
-    if not state.get('bibtex'):
-        bibtex.generate_bibtex(metadata_file, bibtex_file)
-        logger.info('Done creating bibtex file.')
-        state['bibtex'] = True
-        update_state(state, state_file)
-    else:
-        logger.info('Bibtex file already built. Skipping.')
-
-def download_pdfs(state, metadata_file, do_doi_rewrite, folder_name, state_file, list_file):
-    if not state.get('pdf'):
-        pdf.download_pdfs(metadata_file, do_doi_rewrite, folder_name, list_file)
-        logger.info('Done downloading PDFs.')
-        state['pdf'] = True
-        update_state(state, state_file)
-    else:
-        logger.info('PDFs already downloaded. Skipping.')
-
+#TODO maybe own class
 def delete_files(files):
     logger.info('Deleting intermediate files.')
     for f in files:
@@ -114,24 +68,37 @@ def main(args):
     metadata_source = args.metadata
     existing_folders = args.existing_folders
     do_doi_rewrite = args.ieeecs
-    grouping = args.grouping 
+    grouping = args.grouping
+    mapper_name = args.mapper
 
     state_file = f'{target}_state.json'
-    metadata_file = f'{target}_metadata.json'
+    metadata_file = 'metadata.json'
     bibtex_file = f'{target}-{metadata_source}.bib'
     list_file = f'{target}.list'
-
-     # setup folder and state file
-     # TODO folder name should contain metadata source if not dblp
-     # -> only search for the combinaiton to resume state as well
-    setup.main(target, state_file)
-    # load state file
-    state = load_state(state_file)
-    # TODO refactor as not to pass so many arguments everywhere
-    download_metadata(state, target, grouping, metadata_file, state_file)
-    add_identifiers(state, metadata_file, state_file, existing_folders)
-    generate_bibtex(state, metadata_file, bibtex_file, state_file)
-    download_pdfs(state, metadata_file, do_doi_rewrite, target, state_file, list_file)
+    
+    venue = get_venue(target)
+    number = get_number(target)
+    
+    # setup folder and state file
+    file_setup = setup.Setup(target, state_file)
+    file_setup.run()
+    
+    # create pipeline with all downloader steps
+    pipeline = downloader_pipeline.DownloaderPipeline(state_file)
+    metadata_downloader = dblp.DblpDownloader(venue, number, grouping)
+    pipeline.add_step(metadata_downloader)
+    name_generator = names.NameGenerator(existing_folders)
+    pipeline.add_step(name_generator)
+    bibtex_builder = bibtex.BibtexBuilder(bibtex_file)
+    pipeline.add_step(bibtex_builder)
+    doi_resolver = doi.DoiResolver(do_doi_rewrite)
+    pipeline.add_step(doi_resolver)
+    mapper = mapper_factory.get_mapper(mapper_name)
+    pdf_downloader = pdf.PdfDownloader(mapper, target, list_file)
+    pipeline.add_step(pdf_downloader)
+    
+    pipeline.run()
+    
     delete_files([metadata_file, state_file])
     logger.info('Exiting.')
 
