@@ -4,5 +4,7 @@ try/
 *.json
 /log
 */
+!doi_pdf_mappers/
+!exceptions/
 *.bib
 *.list

@@ -4,47 +4,44 @@ from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
-def folder_exists(name):
-    p = Path(f'./{name}')
-    return p.is_dir()
+class Setup():
+    def __init__(self, target, state_file):
+        self._target = target
+        self._state_file = state_file
 
-def state_file_exists(state_file):
-    p = Path(state_file)
-    return p.is_file()
+    def _folder_exists(self):
+        p = Path(f'./{self._target}')
+        return p.is_dir()
 
-def create_folder(name):
-    Path(f"./{name}").mkdir()
-    logger.info(f'Created folder {name}.')
+    def _state_file_exists(self):
+        p = Path(self._state_file)
+        return p.is_file()
 
-def create_state_file(state_file):
-    contents = {
-        'metadata_download': False,
-        'identifier': False,
-        'bibtex': False,
-        'pdf': False,
-    }
-    with open(state_file, 'w') as f:
-        f.write(json.dumps(contents))
-    logger.info(f'Created new state file {state_file}')
+    def _create_folder(self):
+        Path(f"./{self._target}").mkdir()
+        logger.info(f'Created folder {self._target}.')
 
-#TODO rename function
-def main(name, state_file):
-    logger.info('Setting up folder and state structure.')
-    # need different behaviour if the exists or not (error vs create state file)
-    if folder_exists(name):
-        logger.info(f'Folder {name} already exists.')
-        if not state_file_exists(state_file):
-            logger.error('No state file found.')
-            #TODO better exception/create custom/better hints
-            # -> either target is fully downloaded or no steps were completed
-            # TODO add CLI option to force restart of a existing target folder (delete contents and start from zero)
-            raise Exception('no state file found. Force full restart of this download with flag.')
-        logger.info('State file found, resuming state.')
-    else:
-        logger.info(f'No folder {name} found.')
-        create_folder(name)
-        create_state_file(state_file)
-    logger.info('Setup completed.')
+    def _create_state_file(self):
+        with open(self._state_file, 'w') as f:
+            f.write('{}')
+        logger.info(f'Created new state file {self._state_file}')
+
+    def run(self):
+        logger.info('Setting up folder and state structure.')
+        # need different behaviour if the exists or not (error vs create state file)
+        if self._folder_exists():
+            logger.info(f'Folder {self._target} already exists.')
+            if not self._state_file_exists():
+                logger.error('No state file found.')
+                #TODO better exception/create custom/better hints
+                # -> either target is fully downloaded or no steps were completed
+                raise Exception('Folder exists but no state file found. Please delete the folder and run the downloader again.')
+            logger.info('State file exists.')
+        else:
+            logger.info(f'No folder {self._target} found.')
+            self._create_folder()
+            self._create_state_file()
+        logger.info('Setup completed.')
 
 
 if __name__ == '__main__':
