@@ -90,10 +90,10 @@ class DblpDownloader(PipelineStep):
         for publication in hits:
             publication = publication['info']
 
-            keys = ['title', 'venue', 'volume', 'number', 'year', 'doi']
-            #TODO if venue name is different for each metadata source, this needs to come from venues.py
+            keys = ['title', 'volume', 'number', 'year', 'doi']
             # only journals have volume and number fields
             entry = {key: publication.get(key) for key in keys}
+            entry['venue'] = self._venue['name']
             
             # create list of author names
             authors = publication.get('authors')
