@@ -31,7 +31,7 @@ class DblpDownloader(PipelineStep):
             if not acronym: raise ValueError('\'acronym\'')
         except (KeyError, ValueError) as e:
             logger.error(f"Value missing from venues.py: {str(e)}. Please make sure the configuration adheres to the expected format, or try another metadata-source.")
-            sys.exit(1)
+            raise SystemExit()
 
     def _load_mds_config(self):
         self._mds_config = self._venue['metadata_sources']['dblp']

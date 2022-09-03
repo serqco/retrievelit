@@ -42,7 +42,7 @@ def get_venue(target):
         venue = venues.VENUES[venue_string]
     except KeyError:
         logger.error(f"No venue found matching {venue_string}. Please check your spelling or edit 'venues.py' if it should exist.")
-        sys.exit(1)
+        raise SystemExit()
     return venue
 
 def get_number(target):
@@ -110,6 +110,9 @@ if __name__ == '__main__':
     args = parser.parse_args()
     try:
         main(args)
+    except SystemExit:
+        logger.info('Exiting.')
+        sys.exit(1)
     except KeyboardInterrupt:
         logger.error('Manual interruption - cancelling.')
         sys.exit(1)
