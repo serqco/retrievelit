@@ -22,7 +22,7 @@ class DblpDownloader(PipelineStep):
         # mds = metadata-source
         self._mds_config = {}
 
-    def _veryify_mds_config(self):
+    def _verify_mds_config(self):
         try:
             mds_config = self._venue['metadata_sources']['dblp']
             venue_type = mds_config['type']
@@ -37,7 +37,6 @@ class DblpDownloader(PipelineStep):
         self._mds_config = self._venue['metadata_sources']['dblp']
 
     def _get_data_for_year(self):
-        url = 'https://dblp.org/search/publ/api?q=stream:streams/journals/ese:&h=1000&format=json'
         venue_type = self._mds_config['type']
         acronym = self._mds_config['acronym']
         offset = 0
@@ -50,6 +49,9 @@ class DblpDownloader(PipelineStep):
             received += int(hits['@sent'])
             total = int(hits['@total'])
             logger.debug(f"Received {received} entries. Amount in collection: {total}.")
+            if hits['@sent'] == '0':
+                logger.warning('No entries received. This might be due to the hard cap of 10000 computed entries. If you are downloading entries older than ~15 years, please download a specific volume instead.')
+                break
             entries.extend(hits['hit'])
             if received >= total:
                 logger.debug(f"Received all entries.")
@@ -123,7 +125,7 @@ class DblpDownloader(PipelineStep):
         logger.debug(f'year or volume: {self._number}')
         logger.debug(f'grouping: {self._grouping}')
         
-        self._veryify_mds_config()
+        self._verify_mds_config()
         # mds = metadata-source
         self._load_mds_config()
         if self._grouping == 'year':
