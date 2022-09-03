@@ -1,7 +1,10 @@
-import requests
 import logging
+import re
 import sys
 import time
+
+import requests
+from bs4 import BeautifulSoup
 
 import utils
 from pipeline_step import PipelineStep

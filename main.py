@@ -1,6 +1,6 @@
+import argparse
 import json
 import logging
-import argparse
 import os
 import sys
 
@@ -8,12 +8,12 @@ import log_config
 import setup
 import downloader_pipeline
 import mapper_factory
-import dblp
-import venues
-import names
 import bibtex
+import dblp
+import names
 import pdf
 import doi
+import venues
 
 # disable logging from urllib3 library (used by requests)
 logging.getLogger('urllib3').setLevel(logging.ERROR)
@@ -58,7 +58,7 @@ def delete_files(files):
             os.remove(f)
             logger.debug(f'Deleted file {f}.')
         except FileNotFoundError:
-            logger.warn(f'Could not find file {f} for deletion.')
+            logger.warning(f'Could not find file {f} for deletion.')
     logger.info('Finished deleting files.')
     
 
@@ -99,7 +99,8 @@ def main(args):
     
     pipeline.run()
     
-    delete_files([metadata_file, state_file])
+    delete_files([state_file])
+
     logger.info('Exiting.')
 
 

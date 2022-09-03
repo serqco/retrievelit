@@ -1,9 +1,9 @@
-import bibtexparser
 import logging
+
+import bibtexparser
 
 import utils
 from pipeline_step import PipelineStep
-
 
 logger = logging.getLogger(__name__)
 

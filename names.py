@@ -3,6 +3,8 @@ import logging
 import utils
 from pipeline_step import PipelineStep
 
+# from nltk.corpus import stopwords
+
 logger = logging.getLogger(__name__)
 
 class NameGenerator(PipelineStep):

@@ -1,16 +1,16 @@
-from bs4 import BeautifulSoup
-from tqdm import tqdm
-from requests.compat import urljoin
 import logging
-import requests
 import re
 import sys
 import time
 
-from exceptions.doi_pdf_mappers import PdfUrlNotFoundError
-from pipeline_step import PipelineStep
+import requests
+from bs4 import BeautifulSoup
+from requests.compat import urljoin
+from tqdm import tqdm
 
 import utils
+from exceptions.doi_pdf_mappers import PdfUrlNotFoundError
+from pipeline_step import PipelineStep
 
 # seconds to wait between get requests (ignoring code execution time inbetween)
 REQUEST_DELAY = 1
