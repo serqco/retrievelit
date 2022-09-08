@@ -18,10 +18,11 @@ REQUEST_DELAY = 1
 logger = logging.getLogger(__name__)
 
 class PdfDownloader(PipelineStep):
-    def __init__(self, doi_pdf_mapper, folder_name, list_file):
+    def __init__(self, doi_pdf_mapper, folder_name, list_file, dois_resolved):
         self._mapper = doi_pdf_mapper
         self._folder_name = folder_name
         self._list_file = list_file
+        self._dois_resolved = dois_resolved
         self._metadata = []
 
     def _make_get_request(self, url):
@@ -59,25 +60,33 @@ class PdfDownloader(PipelineStep):
                 logger.debug(f'PDF already downloaded for entry {entry}. Skipping.')
                 continue
 
-            # TODO deduplicate
-            resolved_doi = entry.get('resolved_doi')
-            if not resolved_doi:
-                logger.warning(f'No resolved DOI provided in entry {entry}. Skipping.')
-                continue
-            doi = entry.get('doi')
-            if not doi:
-                logger.warning(f'No DOI provided in entry {entry}. Skipping.')
-                continue
+            if self._dois_resolved:
+                resolved_doi = entry.get('resolved_doi')
+                if not resolved_doi:
+                    logger.warning(f'No resolved DOI provided in entry {entry}. Skipping.')
+                    continue
+                doi_parameter = resolved_doi
+            else:                
+                doi = entry.get('doi')
+                if not doi:
+                    logger.warning(f'No DOI provided in entry {entry}. Skipping.')
+                    continue
+                doi_parameter = doi
 
             try:
-                pdf_url = self._mapper.get_pdf_url(doi, resolved_doi)
+                pdf_url = self._mapper.get_pdf_url(doi_parameter)
             except PdfUrlNotFoundError as e:
                 logger.warning(repr(e))
-                logger.warning(f"No pdf URL found in URL {resolved_doi}. Skipping. If this reoccurs, check if you have access to this publication.")
+                logger.warning(f"No pdf URL found for [resolved] DOI {doi_parameter}. Skipping. If this reoccurs, check if you have access to this publication.")
                 access_check_count += 1
                 continue
             
-            pdf_data = self._make_get_request(pdf_url).content
+            r = self._make_get_request(pdf_url)
+            if r.headers.get('Content-Type') != 'application/pdf':
+                logger.error("Resonse from PDF URL didn't contain PDF data. This might be because your IP doesn't have access. Check the logs to see the URL and manually open it to debug.")
+                raise SystemExit()
+            pdf_data = r.content
+            
             filename = f"{self._folder_name}/{entry.get('identifier')}.pdf"
             if not filename:
                 logger.warning(f'No identifier found in entry {entry}. Skipping.')

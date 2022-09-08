@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 
-class Mapper(ABC):
+class DoiMapper(ABC):
     
     @abstractmethod
-    def get_pdf_url(self, doi, resolved_doi):
+    def get_pdf_url(self, doi):
         pass

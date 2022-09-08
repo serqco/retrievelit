@@ -1,12 +1,12 @@
 import logging
 
-from doi_pdf_mappers.abstract_mapper import Mapper
+from doi_pdf_mappers.abstract_resolved_doi_mapper import ResolvedDoiMapper
 from exceptions.doi_pdf_mappers import PdfUrlNotFoundError
 
 logger = logging.getLogger(__name__)
 
-class ComputerOrgTseMapper(Mapper):
-    def get_pdf_url(self, doi, resolved_doi):
+class ComputerOrgTseMapper(ResolvedDoiMapper):
+    def get_pdf_url(self, resolved_doi):
         ids = resolved_doi.split('/journal/')[1]
         if not ids:
             raise PdfUrlNotFoundError("Url doesn't match expected pattern.")
