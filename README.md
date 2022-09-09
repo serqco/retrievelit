@@ -21,7 +21,6 @@ retrievelit is written in Python.
 ## How to install it
 
 ## How to use it
----
 ```bash
 python main.py [-h] [--grouping {year,volume}] [--mapper MAPPER] [--metadata {dblp,crossref}] [--ieeecs] target [existing_folders ...]
 ```
@@ -30,9 +29,9 @@ python main.py [-h] [--grouping {year,volume}] [--mapper MAPPER] [--metadata {db
 | Argument | Description   | Default | Required? |
 |--------|----------------------------------------------------------|--------|-----------|
 | `target` | The combination of Venue and Volume/Year to be downloaded. E. g. `EMSE-35` to download all publications in Volume 35 of the Venue in `venues.py` with the key `EMSE`. This will also be the name of the folder containing the downloads. If the folder already exists, the downloader will try to resume the last state. | | Yes
-| `existing folders` | Names of already existing folders containing previously downloaded publications, whose identifiers will create the namespace to generate the identifiers for the current corpus. | | No
+| `existing_folders` | Names of already existing folders containing previously downloaded publications, whose identifiers will create the namespace to generate the identifiers for the current corpus. | | No
 | `--grouping`   | Whether the number after the venue describes the year or volume of the corpus. | `year` | No        |
-| `--mapper` | The mapper object which will be used to get the PDF URL from the DOI. This must be the name of a class in the `doi_pdf_mappers` folder, which inherits from either ABC of [`DoiMapper`, `ResolvedDoiMapper`]. Can be lowercase or CamelCase. See [here](#how-to-extend-it) how to create your won mapper. | `HtmlParserMapper` | No
+| `--mapper` | The mapper object which will be used to get the PDF URL from the DOI. This must be the name of a class in the `doi_pdf_mappers` folder, which inherits from either ABC of [`DoiMapper`, `ResolvedDoiMapper`]. Can be lowercase or CamelCase. See [here](#creating-a-new-pdf-url-mapper) how to create your own mapper. | `HtmlParserMapper` | No
 | `--metadata` | The source from which retrievelit will get the metadata and DOIs of publications in the corpus. | `dblp` | No
 | `--ieeecs` | Whether DOIs pointing to `ieeexplore.ieee.org` will be rewritten to point to `computer.org` instead. | `False` | No
 
@@ -43,7 +42,6 @@ python main.py --grouping=volume --mapper=springermapper EMSE-35 EMSE-34 EMSE-33
 This will download the Volume 35 of `Empirical Software Engineering` while using the class `SpringerMapper` to generate the PDF URLs. The downloader will look for existing filenames in the folders `./EMSE-34` and `./EMSE-33` to create the namespace before the generation of new filenames. Downloads and additional files will be stored in a new folder `./EMSE-35`.
 
 ## How to extend it
----
 
 ### Adding a venue
 #### Why
@@ -72,7 +70,7 @@ This will download the Volume 35 of `Empirical Software Engineering` while using
         },
     },
 ```
----
+
 ### Creating a new PDF URL mapper
 A (doi-to-pdf-url) mapper is an object which implements the `get_pdf_url` method, which takes a (resolved) DOI and returns the URL of the matching PDF for the downloader.
 #### Why
@@ -89,7 +87,7 @@ A (doi-to-pdf-url) mapper is an object which implements the `get_pdf_url` method
     Use this base class if you need the fully resolved DOI to build the PDF URL.
 - The class has to implement the method `get_pdf_url(self, doi)` which will receive the (resolved) DOI and must return a full URL containing the relevant PDF file.
 - Try to use the logging module to at least log the final URL and any relevant steps before that at the `Debug` level.
-- The program will automatically pick up the new class and match it against the `--mapper` argument when starting the downloader.
+- The program will automatically pick up the new class and match its name against the `--mapper` argument when starting the downloader.
 #### Example
 ```python
 import logging
@@ -104,14 +102,13 @@ class SpringerMapper(DoiMapper):
         logger.debug(f'Built PDF URL {url}')
         return url
 ```
----
+
 ### Adding a new metadata source
 #### Why
 #### How
 #### Example
 
 ## TODO
----
 - functionality:
   - Implement IST (Elsevier) download functionality
   - Metadata file improvements
@@ -133,9 +130,6 @@ class SpringerMapper(DoiMapper):
     Only few non-letter characters should be let through for the title word, mostly dashes.  
     For the basename, even dashes should be collapsed and 'El-Fakih' should become 'ElF', not 'El-'.
 - documentation:
-  - write user instructions for calls
-  - write advanced-user instructions for adding venues
-  - write advanced-user instructions for adding download techniques
 - quality assurance:
   - add test suite
   - GitHub Continuous Integration
