@@ -18,10 +18,11 @@ REQUEST_DELAY = 1
 logger = logging.getLogger(__name__)
 
 class PdfDownloader(PipelineStep):
-    def __init__(self, doi_pdf_mapper, folder_name, list_file):
+    def __init__(self, doi_pdf_mapper, folder_name, list_file, dois_resolved):
         self._mapper = doi_pdf_mapper
         self._folder_name = folder_name
         self._list_file = list_file
+        self._dois_resolved = dois_resolved
         self._metadata = []
 
     def _make_get_request(self, url):
@@ -32,38 +33,6 @@ class PdfDownloader(PipelineStep):
         #TODO catch
         time.sleep(REQUEST_DELAY)
         return response
-
-    def _get_pdf_url(self, response):
-        # computer.org uses JS to populate website, so we need to get PDF URL from the URL itself
-        response_url = response.url
-        if 'computer.org' in response_url:
-            # TODO try to make flexible for different venues
-            # Transactions on Software Engineering (TSE)
-            if 'journal/ts' in response_url:
-                ids = response_url.split('/journal/')[1]
-                #TODO this only works for TSE atm, since the venue isn't part of the original URL
-                url = f'https://www.computer.org/csdl/api/v1/periodical/trans/{ids}/download-article/pdf'
-            # International Conference on Software Engineering (ICSE)
-            elif 'proceedings-article/icse' in response_url:
-                ids = response_url.split('/')[-1]
-                url = f"https://www.computer.org/csdl/pds/api/csdl/proceedings/download-article/{ids}/pdf"
-            logger.debug(f'Built URL {url} for computer.org PDF download.')
-            return url
-        # for other URLs (Springer, ACM, etc.) parse HTML
-        html = response.text
-        soup = BeautifulSoup(html, 'html.parser')
-        #TODO make more robust (hardcode url schema somewhere for springer, etc. and lookup if it matches to prevent random URLs with 'pdf' from matching)
-        element = soup.find('a', href=re.compile('[^A-z]pdf'))
-        if not element:
-            return None
-        url = element.get('href')
-        logger.debug(f'Extracted URL {url} for PDF download from HTML.')
-        return url
-
-    def _build_full_pdf_url(self, pdf_url, response_url):
-        url = urljoin(response_url, pdf_url)
-        logger.debug(f'Built full URL {url} for PDF download.')
-        return url
 
     def _store_pdf(self, pdf_data, filename):
         with open(filename, 'wb') as f:
@@ -85,33 +54,39 @@ class PdfDownloader(PipelineStep):
         for entry in tqdm(self._metadata):
             if access_check_count > 1:
                 logger.error('Failed to get PDF URL too often - Aborting run. Please check if you have access to the publications, if you need to enable the --ieeecs flag, or if the the metadata-file is corrupted and try again.')
-                sys.exit(1)
+                raise SystemExit()
 
             if entry.get('pdf'):
                 logger.debug(f'PDF already downloaded for entry {entry}. Skipping.')
                 continue
 
-            # TODO deduplicate
-            resolved_doi = entry.get('resolved_doi')
-            if not resolved_doi:
-                logger.warning(f'No resolved DOI provided in entry {entry}. Skipping.')
-                continue
-            doi = entry.get('doi')
-            if not doi:
-                logger.warning(f'No DOI provided in entry {entry}. Skipping.')
-                continue
+            if self._dois_resolved:
+                resolved_doi = entry.get('resolved_doi')
+                if not resolved_doi:
+                    logger.warning(f'No resolved DOI provided in entry {entry}. Skipping.')
+                    continue
+                doi_parameter = resolved_doi
+            else:                
+                doi = entry.get('doi')
+                if not doi:
+                    logger.warning(f'No DOI provided in entry {entry}. Skipping.')
+                    continue
+                doi_parameter = doi
 
             try:
-                pdf_url = self._mapper.get_pdf_url(doi, resolved_doi)
-                # pdf_url = get_pdf_url(response)
-            except PdfUrlNotFoundError:
-                logger.warning(f"No pdf URL found in URL {resolved_doi}. Skipping. If this reoccurs, check if you have access to this publication.")
+                pdf_url = self._mapper.get_pdf_url(doi_parameter)
+            except PdfUrlNotFoundError as e:
+                logger.warning(repr(e))
+                logger.warning(f"No pdf URL found for [resolved] DOI {doi_parameter}. Skipping. If this reoccurs, check if you have access to this publication.")
                 access_check_count += 1
                 continue
             
-            pdf_url = self._build_full_pdf_url(pdf_url, resolved_doi)
-
-            pdf_data = self._make_get_request(pdf_url).content
+            r = self._make_get_request(pdf_url)
+            if r.headers.get('Content-Type') != 'application/pdf':
+                logger.error("Resonse from PDF URL didn't contain PDF data. This might be because your IP doesn't have access. Check the logs to see the URL and manually open it to debug.")
+                raise SystemExit()
+            pdf_data = r.content
+            
             filename = f"{self._folder_name}/{entry.get('identifier')}.pdf"
             if not filename:
                 logger.warning(f'No identifier found in entry {entry}. Skipping.')

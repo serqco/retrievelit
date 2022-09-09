@@ -15,6 +15,9 @@ import pdf
 import doi
 import venues
 
+from doi_pdf_mappers.abstract_doi_mapper import DoiMapper
+from doi_pdf_mappers.abstract_resolved_doi_mapper import ResolvedDoiMapper
+
 # disable logging from urllib3 library (used by requests)
 logging.getLogger('urllib3').setLevel(logging.ERROR)
 
@@ -42,13 +45,21 @@ def get_venue(target):
         venue = venues.VENUES[venue_string]
     except KeyError:
         logger.error(f"No venue found matching {venue_string}. Please check your spelling or edit 'venues.py' if it should exist.")
-        sys.exit(1)
+        raise SystemExit()
     return venue
 
 def get_number(target):
     value = target.split('-')[1]
     logger.debug(f'Target year or volume {value} read from input.')
     return value
+
+def is_doi_resolving_needed(mapper):
+    if type(mapper).__base__ == DoiMapper:
+        logger.debug(f"Mapper {mapper} uses pure DOIs. DOI resolving will not be run.")
+        return False
+    elif type(mapper).__base__ == ResolvedDoiMapper:
+        logger.debug(f"Mapper {mapper} uses resolved DOIs. Resolving will be run.")
+        return True
 
 #TODO maybe own class
 def delete_files(files):
@@ -79,6 +90,9 @@ def main(args):
     venue = get_venue(target)
     number = get_number(target)
     
+    mapper = mapper_factory.get_mapper(mapper_name)
+    resolve_dois = is_doi_resolving_needed(mapper)
+    
     # setup folder and state file
     file_setup = setup.Setup(target, state_file)
     file_setup.run()
@@ -91,10 +105,10 @@ def main(args):
     pipeline.add_step(name_generator)
     bibtex_builder = bibtex.BibtexBuilder(bibtex_file)
     pipeline.add_step(bibtex_builder)
-    doi_resolver = doi.DoiResolver(do_doi_rewrite)
-    pipeline.add_step(doi_resolver)
-    mapper = mapper_factory.get_mapper(mapper_name)
-    pdf_downloader = pdf.PdfDownloader(mapper, target, list_file)
+    if resolve_dois:
+        doi_resolver = doi.DoiResolver(do_doi_rewrite)
+        pipeline.add_step(doi_resolver)
+    pdf_downloader = pdf.PdfDownloader(mapper, target, list_file, resolve_dois)
     pipeline.add_step(pdf_downloader)
     
     pipeline.run()
@@ -110,6 +124,9 @@ if __name__ == '__main__':
     args = parser.parse_args()
     try:
         main(args)
+    except SystemExit:
+        logger.info('Exiting.')
+        sys.exit(1)
     except KeyboardInterrupt:
         logger.error('Manual interruption - cancelling.')
         sys.exit(1)

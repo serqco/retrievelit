@@ -4,8 +4,8 @@ from doi_pdf_mappers.abstract_doi_mapper import DoiMapper
 
 logger = logging.getLogger(__name__)
 
-class AcmMapper(DoiMapper):
+class SpringerMapper(DoiMapper):
     def get_pdf_url(self, doi):
-        url = f'https://dl.acm.org/doi/pdf/{doi}'
+        url = f'https://link.springer.com/content/pdf/{doi}.pdf'
         logger.debug(f'Built PDF URL {url}')
         return url

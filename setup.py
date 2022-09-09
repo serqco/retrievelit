@@ -32,10 +32,8 @@ class Setup():
         if self._folder_exists():
             logger.info(f'Folder {self._target} already exists.')
             if not self._state_file_exists():
-                logger.error('No state file found.')
-                #TODO better exception/create custom/better hints
-                # -> either target is fully downloaded or no steps were completed
-                raise Exception('Folder exists but no state file found. Please delete the folder and run the downloader again.')
+                logger.error('Folder exists but no state file found. Please delete the folder and run the downloader again.')
+                raise SystemExit()
             logger.info('State file exists.')
         else:
             logger.info(f'No folder {self._target} found.')

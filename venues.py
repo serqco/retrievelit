@@ -3,7 +3,7 @@
 # type_url are the types for dblp token
 VENUES = {
     'EMSE': {
-        'name': 'empirical software engineering',
+        'name': 'Empirical Software Engineering',
         'type': 'journal',
         'metadata_sources': {
             'dblp': {

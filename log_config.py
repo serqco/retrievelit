@@ -18,6 +18,7 @@ LOGGING_CONFIG = {
         },
         'simple': {
             'format': '%(asctime)s - [%(levelname)s] - %(message)s',
+            'datefmt': '%Y-%m-%d %H:%M:%S',
         },
     },
     'handlers': {
