@@ -25,9 +25,12 @@ class PdfDownloader(PipelineStep):
         self._metadata = []
 
     def _make_get_request(self, url):
+        headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:104.0) Gecko/20100101 Firefox/104.0'}
         logger.debug(f'GET request to {url}')
-        response = requests.get(url)
+        response = requests.head(url, headers=headers)
         logger.debug(f'Reponse code: {response.status_code}')
+        if response.status_code == 404:
+            return None
         response.raise_for_status()
         #TODO catch
         time.sleep(REQUEST_DELAY)
@@ -48,6 +51,7 @@ class PdfDownloader(PipelineStep):
         # TODO implement more robust check
         # check if there's a failure to get the PDF URL multiple times in a row
         # which might point to no access.
+        scihub_count = 0
         access_check_count = 0
         logger.info('Starting PDF download. This may take a few seconds per PDF.')
         for entry in tqdm(self._metadata):
@@ -61,9 +65,9 @@ class PdfDownloader(PipelineStep):
 
             # TODO deduplicate
             resolved_doi = entry.get('resolved_doi')
-            if not resolved_doi:
-                logger.warning(f'No resolved DOI provided in entry {entry}. Skipping.')
-                continue
+            # if not resolved_doi:
+                # logger.warning(f'No resolved DOI provided in entry {entry}. Skipping.')
+                # continue
             doi = entry.get('doi')
             if not doi:
                 logger.warning(f'No DOI provided in entry {entry}. Skipping.')
@@ -77,7 +81,14 @@ class PdfDownloader(PipelineStep):
                 access_check_count += 1
                 continue
             
-            pdf_data = self._make_get_request(pdf_url).content
+            r = self._make_get_request(pdf_url)
+            if not r:
+                logger.error(f'DOI {doi} not present in scihub')
+                scihub_count += 1
+                continue
+            else:
+                continue
+            pdf_data = r.content
             filename = f"{self._folder_name}/{entry.get('identifier')}.pdf"
             if not filename:
                 logger.warning(f'No identifier found in entry {entry}. Skipping.')
@@ -91,6 +102,8 @@ class PdfDownloader(PipelineStep):
             self._add_to_list(filename)
             entry['pdf'] = True
             utils.save_metadata(self._metadata)
+        
+        logger.error(f'Scihub count: {scihub_count}')
 
 if __name__ == '__main__':
     # download_pdfs()

@@ -92,9 +92,11 @@ class DblpDownloader(PipelineStep):
         for publication in hits:
             publication = publication['info']
 
-            keys = ['title', 'volume', 'number', 'year', 'doi']
+            keys = ['title', 'volume', 'number', 'year']
             # only journals have volume and number fields
             entry = {key: publication.get(key) for key in keys}
+            # some DOIs (e. g. IST) contain chars, wich are uppercase in dblp
+            entry['doi'] = publication.get('doi').lower()
             entry['venue'] = self._venue['name']
             
             # create list of author names
