@@ -1,6 +1,4 @@
 # dict key is the str that gets searched for by args
-# acronym used for dblp URL right now
-# type_url are the types for dblp token
 VENUES = {
     'EMSE': {
         'name': 'Empirical Software Engineering',
