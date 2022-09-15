@@ -16,6 +16,7 @@ def get_mapper(name):
             return sc()
     logger.error(f"No mapper class {fullname} found for mapper name {name}. "
                  "Make sure the class exists under 'doi_pdf_mappers' and inherits from a Mapper baseclass.")
+    raise SystemExit()
 
 
 def mapper_classes() -> tg.Sequence[type]:
