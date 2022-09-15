@@ -97,6 +97,7 @@ class DblpDownloader(PipelineStep):
             # only journals have volume and number fields
             entry = {key: publication.get(key) for key in keys}
             entry['venue'] = self._venue['name']
+            entry['venue_type'] = self._venue['type']
             
             # create list of author names
             authors = publication.get('authors')
