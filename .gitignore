@@ -2,9 +2,11 @@
 try/
 
 *.json
+.coverage
 /log
 */
 !doi_pdf_mappers/
 !exceptions/
+!tests
 *.bib
 *.list

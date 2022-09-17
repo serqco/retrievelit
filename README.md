@@ -83,6 +83,11 @@ A (doi-to-pdf-url) mapper is an object which implements the `get_pdf_url` method
 - The class has to implement the method `get_pdf_url(self, doi)` which will receive the (resolved) DOI and must return a full URL containing the relevant PDF file.
 - Use the logging module to log the final URL and any relevant steps before that at the `Debug` level.
 - The program will automatically pick up the new class and match its name against the `--mapper` argument when starting the downloader.
+- After verifying your mapper works as expected, please add a test for it by completing the following steps.
+  - Go to the `test_mappers.py` file in the `tests` directory.
+  - Import your new Mapper class.
+  - Add a tuple containing the classname, as well as a string containing a (resolved) DOI which currently works with the mapper to the `inputs` list.
+  - When running the test suite, this test will confirm whether the mapper still returns a working URL containing PDF data.
 - Study `SpringerMapper` (in `doi_pdf_mappers/springer.py`) as a simple example.
 
 ### Adding a new metadata source
