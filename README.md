@@ -24,22 +24,15 @@ retrievelit is written in Python.
 ```bash
 python main.py [-h] [--grouping {year,volume}] [--mapper MAPPER] [--metadata {dblp,crossref}] [--ieeecs] target [existing_folders ...]
 ```
-
-### Arguments
-| Argument | Description   | Default | Required? |
-|--------|----------------------------------------------------------|--------|-----------|
-| `target` | The combination of Venue and Volume/Year to be downloaded. E. g. `EMSE-35` to download all publications in Volume 35 of the Venue in `venues.py` with the key `EMSE`. This will also be the name of the folder containing the downloads. If the folder already exists, the downloader will try to resume the last state. | | Yes
-| `existing_folders` | Names of already existing folders containing previously downloaded publications, whose identifiers will create the namespace to generate the identifiers for the current corpus. | | No
-| `--grouping`   | Whether the number after the venue describes the year or volume of the corpus. | `year` | No        |
-| `--mapper` | The mapper object which will be used to get the PDF URL from the DOI. This must be the name of a class in the `doi_pdf_mappers` folder, which inherits from either ABC of [`DoiMapper`, `ResolvedDoiMapper`]. Can be lowercase or CamelCase. See [here](#creating-a-new-pdf-url-mapper) how to create your own mapper. | `HtmlParserMapper` | No
-| `--metadata` | The source from which retrievelit will get the metadata and DOIs of publications in the corpus. | `dblp` | No
-| `--ieeecs` | Whether DOIs pointing to `ieeexplore.ieee.org` will be rewritten to point to `computer.org` instead. | `False` | No
+Call it with `-h` yourself to see an up-to-date description of the options.
 
 ### Example
 ```bash
-python main.py --grouping=volume --mapper=springermapper EMSE-35 EMSE-34 EMSE-33
+python main.py --grouping=volume --mapper=Springer EMSE-35 EMSE-34 EMSE-33
 ```
-This will download the Volume 35 of `Empirical Software Engineering` while using the class `SpringerMapper` to generate the PDF URLs. The downloader will look for existing filenames in the folders `./EMSE-34` and `./EMSE-33` to create the namespace before the generation of new filenames. Downloads and additional files will be stored in a new folder `./EMSE-35`.
+This will download the Volume 35 of `Empirical Software Engineering` and use class `SpringerMapper` to generate the PDF URLs.
+The downloader will consider existing filenames in the folders `./EMSE-34` and `./EMSE-33` to avoid name conflicts. 
+Downloads and additional files will be stored in a new folder `./EMSE-35`.
 
 ## How to extend it
 
@@ -79,29 +72,18 @@ A (doi-to-pdf-url) mapper is an object which implements the `get_pdf_url` method
 #### How
 - All mappers are located in the `doi_pdf_mappers` folder in the base directory.
 - For simplicity, create a new file for each mapper. The filename is irrelevant to the program, though it should be as clear as possible for other users.
-- Create a new class with a name that reflects the publisher/site and the venue if necessary. (e. g. `SpringerMapper`)
-- The class has to inherit from either of the following base classes. Which one to use depends on whether your mapping function needs the "pure" DOI, or the "resolved" one (In most cases the article site of the publisher, which might contain needed internal IDs).
+- Create a new class with a name that reflects the publisher/site and the venue if necessary.
+  It must end in `Mapper`, e. g. `SpringerMapper`.
+- The class has to inherit from either of the following base classes. 
+  Which one to use depends on whether your mapping function needs the "pure" DOI only or a "resolved" one.
   - `DoiMapper` (`doi_pdf_mappers.abstract_doi_mapper.DoiMapper`)  
     Use this base class if you only need the DOI to build the PDF URL.
   - `ResolvedDoiMapper` (`doi_pdf_mappers.abstract_resolved_doi_mapper.ResolvedDoiMapper`)  
-    Use this base class if you need the fully resolved DOI to build the PDF URL.
+    Use this base class if some kind of resolving the DOI is required to build the PDF URL.
 - The class has to implement the method `get_pdf_url(self, doi)` which will receive the (resolved) DOI and must return a full URL containing the relevant PDF file.
-- Try to use the logging module to at least log the final URL and any relevant steps before that at the `Debug` level.
+- Use the logging module to log the final URL and any relevant steps before that at the `Debug` level.
 - The program will automatically pick up the new class and match its name against the `--mapper` argument when starting the downloader.
-#### Example
-```python
-import logging
-
-from doi_pdf_mappers.abstract_doi_mapper import DoiMapper
-
-logger = logging.getLogger(__name__)
-
-class SpringerMapper(DoiMapper):
-    def get_pdf_url(self, doi):
-        url = f'https://link.springer.com/content/pdf/{doi}.pdf'
-        logger.debug(f'Built PDF URL {url}')
-        return url
-```
+- Study `SpringerMapper` (in `doi_pdf_mappers/springer.py`) as a simple example.
 
 ### Adding a new metadata source
 #### Why
@@ -110,6 +92,10 @@ class SpringerMapper(DoiMapper):
 
 ## TODO
 - functionality:
+  - ICSE-2021 download retrieves 654 items. That is all of ICSE, but we want the "Technical Research" track only,
+    not SEIP, SEET, SEIS, NIER etc.
+  - The .bib file has only author, title, and venue. We need a proper bibliography file, with nearly all
+    fields that dblp offers.
   - Implement IST (Elsevier) download functionality
   - Metadata file improvements
     - combine `state.json` and `metadata.json`
