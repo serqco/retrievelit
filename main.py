@@ -28,11 +28,15 @@ def create_parser():
     parser = argparse.ArgumentParser(description="Downloads metadata and publication PDFs of a specified venue-volume combination. See README.md for more information.")
 
     parser.add_argument('target', help="the venue-volume combination to be downloaded e. g. 'ESE-2021'")
-    parser.add_argument('existing_folders', nargs='*', help="existing folders in the current directory containing previous downloads, creating the namespace for the target's data")
-
+    parser.add_argument('existing_folders', nargs='*', 
+                        help=("existing folders in the current directory containing previous downloads, "
+                              "constraining the namespace for the target's data"))
     grouping_options = ['year', 'volume']
-    parser.add_argument('--grouping', choices=grouping_options, default='year', help="wether the number after the target determines the year or volume of the choosen corpus. (default: %(default)s)")
-    parser.add_argument('--mapper', default='HtmlParserMapper', help="the class in the 'doi_pdf_mappers' folder to use for retrieving the PDF URL from the DOI of a publication. (default: %(default)s). Check the 'doi_pdf_mappers' folder to see all possible mappers and the README.md on how to implement your own.")
+    parser.add_argument('--grouping', choices=grouping_options, default='year', 
+                        help="whether the number after the target determines the year or volume of the choosen corpus. (default: %(default)s)")
+    parser.add_argument('--mapper', default='HtmlParserMapper', choices=mapper_factory.mapper_names(),
+                        help=("the doi_pdf_mappers class to use for retrieving the PDF URL from the DOI of a publication. "
+                              "See README.md on how to implement your own.")),
     metadata_options = ['dblp', 'crossref']
     parser.add_argument('--metadata', choices=metadata_options, default='dblp', help="the source for metadata and DOIs of the venue. (default: %(default)s)")
     parser.add_argument('--ieeecs', action='store_true', help="rewrite DOIs pointing to ieeexplore to computer.org instead. (default: %(default)s)")

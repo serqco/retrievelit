@@ -1,19 +1,28 @@
 import logging
+import typing as tg
 
-# because of the code in 'doi_pdf_mappers.__init__.py', this loads in all modules in that package
-from doi_pdf_mappers import *
+from doi_pdf_mappers import *  # make sure all mappers have been loaded
+from doi_pdf_mappers import abstract_doi_mapper, abstract_resolved_doi_mapper
 
 logger = logging.getLogger(__name__)
 
 def get_mapper(name):
     logger.debug('Trying to find mapper class for provided mapper name.')
     # all classes in that folder which implement the Mapper ABC.
-    subclasses = abstract_doi_mapper.DoiMapper.__subclasses__()
-    subclasses += abstract_resolved_doi_mapper.ResolvedDoiMapper.__subclasses__()
-    logger.debug(f'Loaded subclasses of Mapper ABCs: {subclasses}.')
-    for sc in subclasses:
-        if sc.__name__ == name or sc.__name__.lower() == name:
+    fullname = f"{name}Mapper"
+    for sc in mapper_classes():
+        if sc.__name__ == fullname or sc.__name__.lower() == fullname.lower():
             logger.debug(f'Matching class found: {sc}.')
             return sc()
-    logger.error(f"No mapping module found for string {name}. Please check your spelling and make sure a file exists in the 'doi_pdf_mappers' folder, which inherits from one of the Mapper classes.")
-    
+    logger.error(f"No mapper class {fullname} found for mapper name {name}. "
+                 "Make sure the class exists under 'doi_pdf_mappers' and inherits from a Mapper baseclass.")
+
+
+def mapper_classes() -> tg.Sequence[type]:
+    return (abstract_doi_mapper.DoiMapper.__subclasses__() +
+            abstract_resolved_doi_mapper.ResolvedDoiMapper.__subclasses__())
+
+
+def mapper_names() -> tg.Sequence[str]:
+    print(len(mapper_classes()), "mapper classes")
+    return [cls.__name__.replace("Mapper", "") for cls in mapper_classes()]
