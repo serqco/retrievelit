@@ -8,9 +8,15 @@ from pipeline_step import PipelineStep
 logger = logging.getLogger(__name__)
 
 class NameGenerator(PipelineStep):
-    def __init__(self, existing_folders):
+    """
+    Create filenames from authornames: Full lastname if there is only 1 author,
+    otherwise three lastname starting letters of up to 3 authors.
+    If append_keyword is given, add the first non-stopword title word. 
+    """
+    def __init__(self, existing_folders, append_keyword=False):
         self._existing_folders = existing_folders
         self._existing_names = []
+        self._append_keyword = append_keyword
         self._stopwords = []
         self._metadata = []
     
@@ -67,15 +73,17 @@ class NameGenerator(PipelineStep):
         
         year_part = article['year'][-2:]
 
-        # titles such as "FACER: An API..." should lead to output "facer" (without ":")
-        # while still keeping non-latin chars, so we strip of punctuation
-        title = [e.lower() for e in article['title'].split()]
-        title_no_stopwords = [e for e in title if e not in self._stopwords]
-        title_part = title_no_stopwords[0].strip(":;,.#@%^&*()-_+=!?<>/\\{}[]")
-
+        if self._append_keyword:
+            # titles such as "FACER: An API..." should lead to output "facer" (without ":")
+            # while still keeping non-latin chars, so we strip of punctuation
+            title = [e.lower() for e in article['title'].split()]
+            title_no_stopwords = [e for e in title if e not in self._stopwords]
+            title_part = "-" + title_no_stopwords[0].strip(":;,.#@%^&*()-_+=!?<>/\\{}[]")
+        else:
+            title_part = ""
         appendices = [''] + [chr(i) for i in range(97,123)]
         for e in appendices:
-            full_name = f"{author_part}{year_part}{e}-{title_part}"
+            full_name = f"{author_part}{year_part}{e}{title_part}"
             logger.debug(f'Checking name {full_name} for uniqueness.')
             if full_name not in self._existing_names:
                 logger.debug("Name is unique.")
@@ -85,7 +93,8 @@ class NameGenerator(PipelineStep):
         raise Exception("Couldn't find free name!")
 
     def run(self):
-        self._load_stopwords()
+        if self._append_keyword:
+            self._load_stopwords()
         logger.debug('Loading existing folders into namespace.')
         self._load_existing_names()
         self._metadata = utils.load_metadata()

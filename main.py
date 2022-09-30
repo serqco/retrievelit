@@ -101,7 +101,7 @@ def main(args):
     pipeline = downloader_pipeline.DownloaderPipeline(state_file)
     metadata_downloader = dblp.DblpDownloader(venue, number, grouping)
     pipeline.add_step(metadata_downloader)
-    name_generator = names.NameGenerator(existing_folders)
+    name_generator = names.NameGenerator(existing_folders, append_keyword=False)
     pipeline.add_step(name_generator)
     bibtex_builder = bibtex.BibtexBuilder(bibtex_file)
     pipeline.add_step(bibtex_builder)
