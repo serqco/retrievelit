@@ -11,7 +11,7 @@ def get_mapper(name):
     # all classes in that folder which implement the Mapper ABC.
     fullname = f"{name}Mapper"
     for sc in mapper_classes():
-        if sc.__name__ == fullname or sc.__name__.lower() == fullname.lower():
+        if sc.__name__ == fullname:
             logger.debug(f'Matching class found: {sc}.')
             return sc()
     logger.error(f"No mapper class {fullname} found for mapper name {name}. "
