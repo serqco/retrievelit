@@ -87,7 +87,7 @@ def main(args):
     mapper_name = args.mapper
 
     state_file = f'{target}_state.json'
-    metadata_file = 'metadata.json'
+    metadata_file = f'{target}-metadata.json'
     bibtex_file = f'{target}-{metadata_source}.bib'
     list_file = f'{target}.list'
     
@@ -103,16 +103,16 @@ def main(args):
     
     # create pipeline with all downloader steps
     pipeline = downloader_pipeline.DownloaderPipeline(state_file)
-    metadata_downloader = dblp.DblpDownloader(venue, number, grouping)
+    metadata_downloader = dblp.DblpDownloader(metadata_file, venue, number, grouping)
     pipeline.add_step(metadata_downloader)
-    name_generator = names.NameGenerator(existing_folders, append_keyword=False)
+    name_generator = names.NameGenerator(metadata_file, existing_folders, append_keyword=False)
     pipeline.add_step(name_generator)
-    bibtex_builder = bibtex.BibtexBuilder(bibtex_file)
+    bibtex_builder = bibtex.BibtexBuilder(metadata_file, bibtex_file)
     pipeline.add_step(bibtex_builder)
     if resolve_dois:
-        doi_resolver = doi.DoiResolver(do_doi_rewrite)
+        doi_resolver = doi.DoiResolver(metadata_file, do_doi_rewrite)
         pipeline.add_step(doi_resolver)
-    pdf_downloader = pdf.PdfDownloader(mapper, target, list_file, resolve_dois)
+    pdf_downloader = pdf.PdfDownloader(metadata_file, mapper, target, list_file, resolve_dois)
     pipeline.add_step(pdf_downloader)
     
     pipeline.run()

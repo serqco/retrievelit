@@ -18,7 +18,8 @@ REQUEST_DELAY = 1
 logger = logging.getLogger(__name__)
 
 class PdfDownloader(PipelineStep):
-    def __init__(self, doi_pdf_mapper, folder_name, list_file, dois_resolved):
+    def __init__(self, metadata_file, doi_pdf_mapper, folder_name, list_file, dois_resolved):
+        self._metadata_file = metadata_file
         self._mapper = doi_pdf_mapper
         self._folder_name = folder_name
         self._list_file = list_file
@@ -45,7 +46,7 @@ class PdfDownloader(PipelineStep):
         logger.debug(f'Added {pdf_path} to {self._list_file}.')
 
     def run(self):
-        self._metadata = utils.load_metadata()
+        self._metadata = utils.load_metadata(self._metadata_file)
         # TODO implement more robust check
         # check if there's a failure to get the PDF URL multiple times in a row
         # which might point to no access.
@@ -96,10 +97,10 @@ class PdfDownloader(PipelineStep):
             # this might lead to duplicate entries in the .list file
             # since it can get interrupted between appending to list file and saving the state
             # so we would append twice (can read in first and add to set if needed to combat this)
-            #TODO should the path still contain the folder if the list file is in there aswell?
             self._add_to_list(filename)
             entry['pdf'] = True
-            utils.save_metadata(self._metadata)
+            utils.save_metadata(self._metadata_file, self._metadata)
+
 
 if __name__ == '__main__':
     # download_pdfs()

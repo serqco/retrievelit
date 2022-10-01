@@ -11,7 +11,8 @@ logger = logging.getLogger(__name__)
 REQUEST_DELAY = 1
 
 class DoiResolver(PipelineStep):
-    def __init__(self, do_doi_rewrite):
+    def __init__(self, metadata_file, do_doi_rewrite):
+        self._metadata_file = metadata_file
         self._do_doi_rewrite = do_doi_rewrite
         self._metadata = []
 
@@ -36,7 +37,7 @@ class DoiResolver(PipelineStep):
         return self._make_get_request(new)
 
     def run(self):
-        self._metadata = utils.load_metadata()
+        self._metadata = utils.load_metadata(self._metadata_file)
         for entry in tqdm(self._metadata):
             
             doi = entry.get('doi')
@@ -53,5 +54,4 @@ class DoiResolver(PipelineStep):
             resolved_doi = response.url
             logger.debug(f'Got resolved DOI {resolved_doi}')
             entry['resolved_doi'] = resolved_doi
-        
-        utils.save_metadata(self._metadata)
+        utils.save_metadata(self._metadata_file, self._metadata)

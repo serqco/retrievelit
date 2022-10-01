@@ -9,7 +9,8 @@ logger = logging.getLogger(__name__)
 
 class BibtexBuilder(PipelineStep):
     
-    def __init__(self, bibtex_file):
+    def __init__(self, metadata_file, bibtex_file):
+        self._metadata_file = metadata_file
         self._bibtex_file = bibtex_file
         self._metadata = {}
         self._bibtex_db = bibtexparser.bibdatabase.BibDatabase()
@@ -40,7 +41,7 @@ class BibtexBuilder(PipelineStep):
         logger.debug(f'Wrote data to bibtex file {self._bibtex_file}')
 
     def run(self):
-        self._metadata = utils.load_metadata()
+        self._metadata = utils.load_metadata(self._metadata_file)
         self._build_bibtex()
         self._save_to_file()
         

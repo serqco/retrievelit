@@ -15,7 +15,8 @@ BASE_URL = 'https://dblp.org/db/'
 API_BASE_URL = 'https://dblp.org/search/publ/api?q='
 
 class DblpDownloader(PipelineStep):
-    def __init__(self, venue, number, grouping):
+    def __init__(self, metadata_file, venue, number, grouping):
+        self._metadata_file = metadata_file
         self._venue = venue
         self._number = number
         self._grouping = grouping
@@ -136,7 +137,7 @@ class DblpDownloader(PipelineStep):
         logger.debug('Metadata received.')
         logger.debug('Rewriting data in uniform format.')
         unified_data = self._unify_data_format(raw_data)
-        utils.save_metadata(unified_data)
+        utils.save_metadata(self._metadata_file, unified_data)
 
 if __name__ == '__main__':
     logger.error('Not a standalone file. Please run the main script instead.')

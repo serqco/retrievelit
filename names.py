@@ -13,7 +13,8 @@ class NameGenerator(PipelineStep):
     otherwise three lastname starting letters of up to 3 authors.
     If append_keyword is given, add the first non-stopword title word. 
     """
-    def __init__(self, existing_folders, append_keyword=False):
+    def __init__(self, metadata_file, existing_folders, append_keyword=False):
+        self._metadata_file = metadata_file
         self._existing_folders = existing_folders
         self._existing_names = []
         self._append_keyword = append_keyword
@@ -97,14 +98,14 @@ class NameGenerator(PipelineStep):
             self._load_stopwords()
         logger.debug('Loading existing folders into namespace.')
         self._load_existing_names()
-        self._metadata = utils.load_metadata()
+        self._metadata = utils.load_metadata(self._metadata_file)
         logger.debug('Generating identifiers for publications.')
         for e in self._metadata:
             generated_name = self._generate_name(e)
             e['identifier'] = generated_name
             self._existing_names.append(generated_name)
         logger.debug('Identifiers generated.')
-        utils.save_metadata(self._metadata)
+        utils.save_metadata(self._metadata_file, self._metadata)
 
 if __name__ == '__main__':
     logger.error('Not a standalone file. Please run the main script instead.')
