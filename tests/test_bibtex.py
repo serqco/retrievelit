@@ -11,6 +11,10 @@ def test_bibtex(mocker: MockerFixture) -> None:
         "venue": "venue",
         "volume": "volume",
         "number": "number",
+        "pages": "3-5",
+        "year": "2021",
+        "type": "Conference Paper",
+        "doi": "12.3456/7.891011",
         "authors": [
             "John Doe",
             "Jane Doe"
@@ -19,10 +23,14 @@ def test_bibtex(mocker: MockerFixture) -> None:
     expected_data = textwrap.dedent("""\
         @article{identifier,
          author = {John Doe and Jane Doe},
+         doi = {12.3456/7.891011},
          number = {number},
+         pages = {3-5},
          title = {title},
+         type = {Conference Paper},
          venue = {venue},
-         volume = {volume}
+         volume = {volume},
+         year = {2021}
         }
     """)
     

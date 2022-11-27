@@ -93,7 +93,7 @@ class DblpDownloader(PipelineStep):
         for publication in hits:
             publication = publication['info']
 
-            keys = ['title', 'volume', 'number', 'year', 'doi']
+            keys = ['title', 'volume', 'number', 'pages', 'year', 'type', 'doi']
             # only journals have volume and number fields
             entry = {key: publication.get(key) for key in keys}
             entry['venue'] = self._venue['name']

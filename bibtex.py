@@ -22,9 +22,9 @@ class BibtexBuilder(PipelineStep):
             #TODO build names with bibtex standard (last, first??)
             'author': ' and '.join(publication['authors']),
         }
-        fields = ['title', 'venue', 'volume', 'number']
+        fields = ['title', 'venue', 'volume', 'number', 'pages', 'year', 'type', 'doi']
         for field in fields:
-            # volume and number are None for conferences
+            # volume and number are None for conferences, so exclude these from .bib file
             if publication.get(field):
                 entry[field] = publication[field]
         logger.debug(f'Built bibtex entry: {entry}')
