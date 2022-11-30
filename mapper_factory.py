@@ -6,7 +6,8 @@ from doi_pdf_mappers import abstract_doi_mapper, abstract_resolved_doi_mapper
 
 logger = logging.getLogger(__name__)
 
-def get_mapper(name):
+def get_mapper(name: str) -> tg.Union[type[abstract_doi_mapper.DoiMapper],
+                                      type[abstract_resolved_doi_mapper.ResolvedDoiMapper]]:
     logger.debug('Trying to find mapper class for provided mapper name.')
     # all classes in that folder which implement the Mapper ABC.
     fullname = f"{name}Mapper"

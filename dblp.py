@@ -1,10 +1,8 @@
 import logging
-import re
-import sys
 import time
+import typing as tg
 
 import requests
-from bs4 import BeautifulSoup
 
 import utils
 from pipeline_step import PipelineStep
@@ -15,15 +13,17 @@ BASE_URL = 'https://dblp.org/db/'
 API_BASE_URL = 'https://dblp.org/search/publ/api?q='
 
 class DblpDownloader(PipelineStep):
-    def __init__(self, metadata_file, venue, number, grouping):
+    """Used to download metadata from dblp.org and store it in a uniform format."""
+    def __init__(self, metadata_file: str, venue: tg.Dict, number: str, grouping: str) -> None:
         self._metadata_file = metadata_file
         self._venue = venue
         self._number = number
         self._grouping = grouping
         # mds = metadata-source
-        self._mds_config = {}
+        self._mds_config: tg.Dict = {}
 
-    def _verify_mds_config(self):
+    def _verify_mds_config(self) -> None:
+        """Verify that the venue dict contains all fields needed by the downloader."""
         try:
             mds_config = self._venue['metadata_sources']['dblp']
             venue_type = mds_config['type']
@@ -34,10 +34,12 @@ class DblpDownloader(PipelineStep):
             logger.error(f"Value missing from venues.py: {str(e)}. Please make sure the configuration adheres to the expected format, or try another metadata-source.")
             raise SystemExit()
 
-    def _load_mds_config(self):
+    def _load_mds_config(self) -> None:
+        """Load the fields of the venue dict containing required information to download the metadata from dblp."""
         self._mds_config = self._venue['metadata_sources']['dblp']
 
-    def _get_data_for_year(self):
+    def _get_data_for_year(self) -> tg.List:
+        """Download the metadata of the venue for the specified year."""
         venue_type = self._mds_config['type']
         acronym = self._mds_config['acronym']
         offset = 0
@@ -67,28 +69,32 @@ class DblpDownloader(PipelineStep):
         logger.debug(f"{len(year_entries)} entries found for year {self._number}.")
         return year_entries
         
-    def _build_volume_url(self):
+    def _build_volume_url(self) -> str:
+        """Generate the dbl URL to download the specified volume of the venue."""
         venue_type = self._mds_config['type']
         acronym = self._mds_config['acronym']
         url = f"{API_BASE_URL}toc:db/{venue_type}/{acronym}/{acronym}{self._number}.bht:&h=1000&format=json"
         logger.debug(f'Built volume url: {url}')
         return url
 
-    def _get_data(self, url):
+    def _get_data(self, url: str) -> tg.Dict:
+        """Send a get request to the URL and return the json data, if successful."""
         logger.debug(f'GET request to {url}')
         r = requests.get(url)
         logger.debug(f'Reponse code: {r.status_code}')
         r.raise_for_status()
         return r.json()
 
-    def _get_data_for_volume(self):
+    def _get_data_for_volume(self) -> tg.List:
+        """Download the metadata of the venue for the specified volume."""
         volume_url = self._build_volume_url()
         data = self._get_data(volume_url)
         entries = data['result']['hits']['hit']
         logger.debug(f"Received {len(entries)} entries for volume {self._number}.")
         return entries
 
-    def _unify_data_format(self, hits):
+    def _unify_data_format(self, hits: tg.List) -> tg.List:
+        """Rewrite the dblp metadata into a uniform format."""
         result = []
         for publication in hits:
             publication = publication['info']
@@ -121,7 +127,8 @@ class DblpDownloader(PipelineStep):
             result.append(entry)
         return result
 
-    def run(self):
+    def run(self) -> None:
+        """Download the dblp metadata for the specified target and save it to a file."""
         logger.debug(f'Downloading metadata for:')
         logger.debug(f'venue: {self._venue}')
         logger.debug(f'year or volume: {self._number}')
