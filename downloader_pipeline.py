@@ -7,6 +7,7 @@ logger = logging.getLogger(__name__)
 
 class DownloaderPipeline():
     """Class to define and execute the pipeline of the downloader."""
+    # TODO add proper docstring for public methods.
     def __init__(self, state_file: str) -> None:
         self._state_file = state_file
         self._state: tg.Dict = {}

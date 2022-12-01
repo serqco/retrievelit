@@ -43,7 +43,7 @@ def create_parser() -> argparse.ArgumentParser:
     parser.add_argument('--ieeecs', action='store_true', help="rewrite DOIs pointing to ieeexplore to computer.org instead. (default: %(default)s)")
     return parser
 
-def get_venue(target: str) -> dict:
+def get_venue(target: str) -> tg.Dict:
     """Return the specified venue data, if it exists."""
     venue_string = target.split('-')[0]
     logger.debug(f'Target venue-string {venue_string} read from input.')
@@ -60,7 +60,7 @@ def get_number(target: str) -> str:
     logger.debug(f'Target year or volume {value} read from input.')
     return value
 
-def is_doi_resolving_needed(mapper: tg.Union[type[DoiMapper], type[ResolvedDoiMapper]]) -> bool:
+def is_doi_resolving_needed(mapper: tg.Union[DoiMapper, ResolvedDoiMapper]) -> bool:
     """Check if the chosen mapper requires its DOIs to be resolved."""
     if type(mapper).__base__ == DoiMapper:
         logger.debug(f"Mapper {mapper} uses pure DOIs. DOI resolving will not be run.")
@@ -69,7 +69,7 @@ def is_doi_resolving_needed(mapper: tg.Union[type[DoiMapper], type[ResolvedDoiMa
         logger.debug(f"Mapper {mapper} uses resolved DOIs. Resolving will be run.")
         return True
     else:
-        logger.error(f"Class {mapper} doesn't inherit from DoiMapper, nor ResolvedDoiMapper.")
+        logger.error(f"Class {type(mapper)} doesn't inherit from DoiMapper, nor ResolvedDoiMapper.")
         raise SystemExit()
 
 #TODO maybe own class

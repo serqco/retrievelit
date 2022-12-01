@@ -1,4 +1,5 @@
 import logging
+import typing as tg
 
 import bibtexparser
 
@@ -8,14 +9,15 @@ from pipeline_step import PipelineStep
 logger = logging.getLogger(__name__)
 
 class BibtexBuilder(PipelineStep):
-    
-    def __init__(self, metadata_file, bibtex_file):
+    """Populate the bibtex file based on the data in metadata_file."""
+    def __init__(self, metadata_file: str, bibtex_file: str):
         self._metadata_file = metadata_file
         self._bibtex_file = bibtex_file
-        self._metadata = {}
-        self._bibtex_db = bibtexparser.bibdatabase.BibDatabase()
+        self._metadata: tg.List = []
+        self._bibtex_db: bibtexparser.bibdatabase.BibDatabase = bibtexparser.bibdatabase.BibDatabase()
     
-    def _build_entry(self, publication):
+    def _build_entry(self, publication: tg.Dict) -> tg.Dict:
+        """Create the article entry for the bibtex file in the format bibtexparser expects."""
         entry = {
             'ENTRYTYPE': 'article',
             'ID': publication['identifier'],
@@ -30,18 +32,21 @@ class BibtexBuilder(PipelineStep):
         logger.debug(f'Built bibtex entry: {entry}')
         return entry
     
-    def _build_bibtex(self):
+    def _build_bibtex(self) -> None:
+        """Create the bibtex entries and write them to the bibtex database object."""
         logger.debug('Building bibtex entries.')
         bibtex = [self._build_entry(e) for e in self._metadata]
         self._bibtex_db.entries = bibtex
 
-    def _save_to_file(self):
+    def _save_to_file(self) -> None:
+        """Write the bibtex database to the bibtex file."""
         logger.debug('Creating bibtex file.')
         with open(self._bibtex_file, 'w', encoding='utf-8') as f:
             bibtexparser.dump(self._bibtex_db, f)
         logger.debug(f'Wrote data to bibtex file {self._bibtex_file}')
 
-    def run(self):
+    def run(self) -> None:
+        """Run the full bibtex process."""
         self._metadata = utils.load_metadata(self._metadata_file)
         self._build_bibtex()
         self._save_to_file()

@@ -6,8 +6,9 @@ from doi_pdf_mappers import abstract_doi_mapper, abstract_resolved_doi_mapper
 
 logger = logging.getLogger(__name__)
 
-def get_mapper(name: str) -> tg.Union[type[abstract_doi_mapper.DoiMapper],
-                                      type[abstract_resolved_doi_mapper.ResolvedDoiMapper]]:
+def get_mapper(name: str) -> tg.Union[abstract_doi_mapper.DoiMapper,
+                                      abstract_resolved_doi_mapper.ResolvedDoiMapper]:
+    """Return an instance of the mapper class specified in `name`, if possible."""
     logger.debug('Trying to find mapper class for provided mapper name.')
     # all classes in that folder which implement the Mapper ABC.
     fullname = f"{name}Mapper"
@@ -20,11 +21,13 @@ def get_mapper(name: str) -> tg.Union[type[abstract_doi_mapper.DoiMapper],
     raise SystemExit()
 
 
-def mapper_classes() -> tg.Sequence[type]:
+def mapper_classes() -> tg.Sequence[tg.Type]:
+    """Return all subclasses of DoiMapper and ResolvedDoiMapper."""
     return (abstract_doi_mapper.DoiMapper.__subclasses__() +
             abstract_resolved_doi_mapper.ResolvedDoiMapper.__subclasses__())
 
 
 def mapper_names() -> tg.Sequence[str]:
-    print(len(mapper_classes()), "mapper classes")
+    """Return the names of all classes in mapper_classes(), without the `Mapper` substring."""
+    logger.debug(len(mapper_classes()), "mapper classes")
     return [cls.__name__.replace("Mapper", "") for cls in mapper_classes()]

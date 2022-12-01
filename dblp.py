@@ -13,7 +13,7 @@ BASE_URL = 'https://dblp.org/db/'
 API_BASE_URL = 'https://dblp.org/search/publ/api?q='
 
 class DblpDownloader(PipelineStep):
-    """Used to download metadata from dblp.org and store it in a uniform format."""
+    """Download metadata for a target from dblp.org and store it in a uniform format."""
     def __init__(self, metadata_file: str, venue: tg.Dict, number: str, grouping: str) -> None:
         self._metadata_file = metadata_file
         self._venue = venue

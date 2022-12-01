@@ -1,11 +1,14 @@
 import logging
 import time
+import typing as tg
 
 import requests
 from tqdm import tqdm
 
 import utils
 from exceptions.doi_pdf_mappers import PdfUrlNotFoundError
+from doi_pdf_mappers.abstract_doi_mapper import DoiMapper
+from doi_pdf_mappers.abstract_resolved_doi_mapper import ResolvedDoiMapper
 from pipeline_step import PipelineStep
 
 # seconds to wait between get requests (ignoring code execution time inbetween)
@@ -14,15 +17,18 @@ REQUEST_DELAY = 1
 logger = logging.getLogger(__name__)
 
 class PdfDownloader(PipelineStep):
-    def __init__(self, metadata_file, doi_pdf_mapper, folder_name, list_file, dois_resolved):
+    """Download the article PDFs and write the filepath to the list file."""
+    def __init__(self, metadata_file: str, doi_pdf_mapper: tg.Union[DoiMapper, ResolvedDoiMapper], 
+                 folder_name: str, list_file: str, dois_resolved: bool) -> None:
         self._metadata_file = metadata_file
         self._mapper = doi_pdf_mapper
         self._folder_name = folder_name
         self._list_file = list_file
         self._dois_resolved = dois_resolved
-        self._metadata = []
+        self._metadata: tg.List = []
 
-    def _make_get_request(self, url):
+    def _make_get_request(self, url: str) -> requests.Response:
+        """Make a GET request to url and return the response if successful."""
         logger.debug(f'GET request to {url}')
         response = requests.get(url)
         logger.debug(f'Reponse code: {response.status_code}')
@@ -31,17 +37,20 @@ class PdfDownloader(PipelineStep):
         time.sleep(REQUEST_DELAY)
         return response
 
-    def _store_pdf(self, pdf_data, filename):
+    def _store_pdf(self, pdf_data: bytes, filename: str) -> None:
+        """Write pdf_data to a file."""
         with open(filename, 'wb') as f:
             f.write(pdf_data)
         logger.debug(f'Wrote PDF to file {filename}')
 
-    def _add_to_list(self, pdf_path):
+    def _add_to_list(self, pdf_path: str) -> None:
+        """Append the pdf filepath to the list file."""
         with open(self._list_file, 'a') as f:
             f.write(f'{pdf_path}\n')
         logger.debug(f'Added {pdf_path} to {self._list_file}.')
 
-    def run(self):
+    def run(self) -> None:
+        """Run the full PDF download process."""
         self._metadata = utils.load_metadata(self._metadata_file)
         # TODO implement more robust check
         # check if there's a failure to get the PDF URL multiple times in a row
@@ -79,7 +88,8 @@ class PdfDownloader(PipelineStep):
                 continue
             
             r = self._make_get_request(pdf_url)
-            if 'application/pdf' not in r.headers.get('Content-Type'):
+            content_type = r.headers.get('Content-Type')
+            if content_type is None or 'application/pdf' not in content_type:
                 logger.error("Resonse from PDF URL didn't contain PDF data. This might be because your IP doesn't have access. Check the logs to see the URL and manually open it to debug.")
                 raise SystemExit()
             pdf_data = r.content
