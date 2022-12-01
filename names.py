@@ -1,4 +1,5 @@
 import logging
+import typing as tg
 
 import utils
 from pipeline_step import PipelineStep
@@ -13,29 +14,32 @@ class NameGenerator(PipelineStep):
     otherwise three lastname starting letters of up to 3 authors.
     If append_keyword is given, add the first non-stopword title word. 
     """
-    def __init__(self, metadata_file, existing_folders, append_keyword=False):
+    def __init__(self, metadata_file: str, existing_folders: tg.List[str], append_keyword: bool = False):
         self._metadata_file = metadata_file
         self._existing_folders = existing_folders
-        self._existing_names = []
+        self._existing_names: tg.List = []
         self._append_keyword = append_keyword
-        self._stopwords = []
-        self._metadata = []
+        self._stopwords: tg.List = []
+        self._metadata: tg.List = []
     
-    def _load_stopwords(self):
+    def _load_stopwords(self) -> None:
+        """Load the stopwords from the file and store them in self._stopwords."""
         logger.debug('Loading stopwords.')
         with open('stopwords.txt', 'r') as f:
             stopwords_string = f.read()
         self._stopwords = stopwords_string.split('\n')
         logger.debug(f'Loaded stopwords {self._stopwords}.')
 
-    def _get_names_from_list(self, list_string):
+    def _get_names_from_list(self, list_string: str) -> tg.List[str]:
+        """Extract and return the list of existing names from the filenames in list_string."""
         names = list_string.split('\n')
         # get identifier from path if not empty string (last new line)
         list_names = [e.split('/')[1][:-4] for e in names if e]
         logger.debug(f'Loaded names {list_names}')
         return list_names
 
-    def _load_existing_names(self):
+    def _load_existing_names(self) -> None:
+        """Load all existing names from the .list files in the existing folders."""
         # No need to load names for this venue-volume target,
         # since names are generated in one step, so if we get to here,
         # we want to regenerate all names anyways.
@@ -57,7 +61,8 @@ class NameGenerator(PipelineStep):
             logger.debug(f'Loaded names from file {list_file}.')
         logger.debug('Finished loading existing names.')
 
-    def _generate_name(self, article):
+    def _generate_name(self, article: tg.Dict) -> str:
+        """Generate and return the name (identifier) of an article."""
         # assume surnames such as "van Klaassen" should lead to output "Kla",
         # while "Mueller-Birn" should lead to "Mue"
         # so seperate by whitespace and take last word
@@ -93,7 +98,8 @@ class NameGenerator(PipelineStep):
         #TODO better exception + logging
         raise Exception("Couldn't find free name!")
 
-    def run(self):
+    def run(self) -> None:
+        """Generate the identifiers for all articles, respecting existing names in the provided folders of previous runs."""
         if self._append_keyword:
             self._load_stopwords()
         logger.debug('Loading existing folders into namespace.')

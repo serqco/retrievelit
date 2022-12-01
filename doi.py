@@ -1,6 +1,7 @@
 import logging
 import requests
 import time
+import typing as tg
 from tqdm import tqdm
 
 import utils
@@ -11,15 +12,18 @@ logger = logging.getLogger(__name__)
 REQUEST_DELAY = 1
 
 class DoiResolver(PipelineStep):
-    def __init__(self, metadata_file, do_doi_rewrite):
+    """Resolve the DOI by sending a GET request to the DOI and following all redirects."""
+    def __init__(self, metadata_file: str, do_doi_rewrite: bool) -> None:
         self._metadata_file = metadata_file
         self._do_doi_rewrite = do_doi_rewrite
-        self._metadata = []
+        self._metadata: tg.List = []
 
-    def _build_url(self, doi):
+    def _build_url(self, doi: str) -> str:
+        """Return the DOI URL to resolve the given DOI."""
         return f'https://doi.org/{doi}'
 
-    def _make_get_request(self, url):
+    def _make_get_request(self, url: str) -> requests.Response:
+        """Execute a GET request to url and return the response if it was successful."""
         logger.debug(f'GET request to {url}')
         response = requests.get(url)
         logger.debug(f'Reponse code: {response.status_code}')
@@ -28,7 +32,12 @@ class DoiResolver(PipelineStep):
         time.sleep(REQUEST_DELAY)
         return response
 
-    def _rewrite_doi_url(self, response, doi):
+    def _rewrite_doi_url(self, response: requests.Response, doi: str) -> requests.Response:
+        """Rewrite the DOI URL if it resolved to a IEEE domain. 
+        
+        Make a GET request to the new URL and return the response if it did.
+        Otherwise return the original response.
+        """
         rewrite_url = 'ieeexplore.ieee.org'
         if rewrite_url not in response.url:
             return response
@@ -36,7 +45,8 @@ class DoiResolver(PipelineStep):
         logger.debug(f'Rewrote URL {response.url} to {new}')
         return self._make_get_request(new)
 
-    def run(self):
+    def run(self) -> None:
+        """Run the full resolve process."""
         self._metadata = utils.load_metadata(self._metadata_file)
         for entry in tqdm(self._metadata):
             

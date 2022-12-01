@@ -6,7 +6,8 @@ from exceptions.doi_pdf_mappers import PdfUrlNotFoundError
 logger = logging.getLogger(__name__)
 
 class ComputerOrgJournalMapper(ResolvedDoiMapper):
-    def get_pdf_url(self, resolved_doi):
+    """Get the PDF download URL for DOIs resolving to journal publications on computer.org domains."""
+    def get_pdf_url(self, resolved_doi: str) -> str:
         logger.debug(f'get_pdf_url({resolved_doi})')
         ids = resolved_doi.split('/journal/')[1]
         if not ids:
