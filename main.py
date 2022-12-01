@@ -1,8 +1,8 @@
 import argparse
-import json
 import logging
 import os
 import sys
+import typing as tg
 
 import log_config
 import setup
@@ -24,7 +24,8 @@ logging.getLogger('urllib3').setLevel(logging.ERROR)
 # TODO logger doesn't use utf-8 right now
 logger = logging.getLogger(__name__)
 
-def create_parser():
+def create_parser() -> argparse.ArgumentParser:
+    """Set up and return the parser for passed arguments."""
     parser = argparse.ArgumentParser(description="Downloads metadata and publication PDFs of a specified venue-volume combination. See README.md for more information.")
 
     parser.add_argument('target', help="the venue-volume combination to be downloaded e. g. 'ESE-2021'")
@@ -42,7 +43,8 @@ def create_parser():
     parser.add_argument('--ieeecs', action='store_true', help="rewrite DOIs pointing to ieeexplore to computer.org instead. (default: %(default)s)")
     return parser
 
-def get_venue(target):
+def get_venue(target: str) -> tg.Dict:
+    """Return the specified venue data, if it exists."""
     venue_string = target.split('-')[0]
     logger.debug(f'Target venue-string {venue_string} read from input.')
     try:
@@ -52,21 +54,27 @@ def get_venue(target):
         raise SystemExit()
     return venue
 
-def get_number(target):
+def get_number(target: str) -> str:
+    """Return the number part of the target string."""
     value = target.split('-')[1]
     logger.debug(f'Target year or volume {value} read from input.')
     return value
 
-def is_doi_resolving_needed(mapper):
+def is_doi_resolving_needed(mapper: tg.Union[DoiMapper, ResolvedDoiMapper]) -> bool:
+    """Check if the chosen mapper requires its DOIs to be resolved."""
     if type(mapper).__base__ == DoiMapper:
         logger.debug(f"Mapper {mapper} uses pure DOIs. DOI resolving will not be run.")
         return False
     elif type(mapper).__base__ == ResolvedDoiMapper:
         logger.debug(f"Mapper {mapper} uses resolved DOIs. Resolving will be run.")
         return True
+    else:
+        logger.error(f"Class {type(mapper)} doesn't inherit from DoiMapper, nor ResolvedDoiMapper.")
+        raise SystemExit()
 
 #TODO maybe own class
-def delete_files(files):
+def delete_files(files: tg.Sequence[str]) -> None:
+    """Delete the specified files."""
     logger.info('Deleting intermediate files.')
     for f in files:
         try:
@@ -77,7 +85,8 @@ def delete_files(files):
     logger.info('Finished deleting files.')
     
 
-def main(args):
+def main(args: argparse.Namespace) -> None:
+    """Run the downloader pipeline using the settings in args."""
     logger.debug(f'Configuration: {vars(args)}')
     target = args.target
     metadata_source = args.metadata
