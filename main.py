@@ -17,6 +17,7 @@ import venues
 
 from doi_pdf_mappers.abstract_doi_mapper import DoiMapper
 from doi_pdf_mappers.abstract_resolved_doi_mapper import ResolvedDoiMapper
+from doi_pdf_mappers.elsevier import ElsevierMapper
 
 # disable logging from urllib3 library (used by requests)
 logging.getLogger('urllib3').setLevel(logging.ERROR)
@@ -72,6 +73,16 @@ def is_doi_resolving_needed(mapper: tg.Union[DoiMapper, ResolvedDoiMapper]) -> b
         logger.error(f"Class {type(mapper)} doesn't inherit from DoiMapper, nor ResolvedDoiMapper.")
         raise SystemExit()
 
+def is_selenium_needed(mapper: tg.Union[DoiMapper, ResolvedDoiMapper]) -> bool:
+    """Check if the chosen mapper requires Selenium to download."""
+    if isinstance(mapper, ElsevierMapper):
+        logger.debug(f"Mapper {mapper} is of type `ElsevierMapper`. The downloader will use Selenium to get the PDF files.")
+        return True
+    else:
+        logger.debug(f"Mapper {mapper} does not require Selenium to download the PDF files. The downloader will use requests to get the PDF files.")
+        return False
+
+
 #TODO maybe own class
 def delete_files(files: tg.Sequence[str]) -> None:
     """Delete the specified files."""
@@ -105,9 +116,9 @@ def main(args: argparse.Namespace) -> None:
     
     mapper = mapper_factory.get_mapper(mapper_name)
     resolve_dois = is_doi_resolving_needed(mapper)
+    use_selenium = is_selenium_needed(mapper)
     
-    # setup folder and state file
-    file_setup = setup.Setup(target, state_file)
+    file_setup = setup.Setup(target, state_file, use_selenium)
     file_setup.run()
     
     # create pipeline with all downloader steps
@@ -121,7 +132,7 @@ def main(args: argparse.Namespace) -> None:
     if resolve_dois:
         doi_resolver = doi.DoiResolver(metadata_file, do_doi_rewrite)
         pipeline.add_step(doi_resolver)
-    pdf_downloader = pdf.PdfDownloader(metadata_file, mapper, target, list_file, resolve_dois)
+    pdf_downloader = pdf.PdfDownloader(metadata_file, mapper, target, list_file, resolve_dois, use_selenium)
     pipeline.add_step(pdf_downloader)
     
     pipeline.run()
