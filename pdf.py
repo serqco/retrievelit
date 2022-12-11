@@ -75,9 +75,13 @@ class PdfDownloader(PipelineStep):
         download_file = Path.joinpath(Path(self._folder_name), f'1-s2.0-{elsevier_id}-main.pdf')
         logger.debug(f'Downloading PDF from URL {pdf_url} to file {download_file}.')
         driver.get(pdf_url)
+        if driver.current_url != pdf_url:
+            logger.error(f'No access to PDF at URL {pdf_url}.')
+            raise SystemExit()
         while not download_file.is_file():
             logger.debug(f"File {download_file} does not exist yet.")
             time.sleep(2)
+        # means we got redirected back to the abstract page in case of no access to the PDF.
         logger.debug(f"Finished downloading file {download_file}.")
         logger.debug(f"Renaming file to {filename}")
         download_file.rename(filename)
