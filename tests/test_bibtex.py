@@ -4,7 +4,7 @@ import bibtex
 from pytest_mock import MockerFixture
 
 def test_bibtex(mocker: MockerFixture) -> None:
-    bibtex_builder = bibtex.BibtexBuilder(None)
+    bibtex_builder = bibtex.BibtexBuilder("mocked", "mocked")
     input_data = [{
         "identifier": "identifier",
         "title": "title",
