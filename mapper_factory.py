@@ -29,5 +29,5 @@ def mapper_classes() -> tg.Sequence[tg.Type]:
 
 def mapper_names() -> tg.Sequence[str]:
     """Return the names of all classes in mapper_classes(), without the `Mapper` substring."""
-    logger.debug(len(mapper_classes()), "mapper classes")
+    logger.debug(f"{len(mapper_classes())} mapper classes")
     return [cls.__name__.replace("Mapper", "") for cls in mapper_classes()]
