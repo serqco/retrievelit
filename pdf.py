@@ -43,7 +43,8 @@ class PdfDownloader(PipelineStep):
     def _make_get_request(self, url: str) -> requests.Response:
         """Make a GET request to url and return the response if successful."""
         logger.debug(f'GET request to {url}')
-        response = requests.get(url)
+        headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:104.0) Gecko/20100101 Firefox/104.0'}
+        response = requests.get(url, headers=headers)
         logger.debug(f'Reponse code: {response.status_code}')
         response.raise_for_status()
         #TODO catch

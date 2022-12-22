@@ -102,6 +102,8 @@ class DblpDownloader(PipelineStep):
             keys = ['title', 'volume', 'number', 'pages', 'year', 'type', 'doi']
             # only journals have volume and number fields
             entry = {key: publication.get(key) for key in keys}
+            # dblp returns DOIs in uppercase, which e. g. SciHub can't handle.
+            entry['doi'] = entry['doi'].lower()
             entry['venue'] = self._venue['name']
             entry['venue_type'] = self._venue['type']
             
