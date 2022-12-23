@@ -22,16 +22,6 @@ class DoiResolver(PipelineStep):
         """Return the DOI URL to resolve the given DOI."""
         return f'https://doi.org/{doi}'
 
-    def _make_get_request(self, url: str) -> requests.Response:
-        """Execute a GET request to url and return the response if it was successful."""
-        logger.debug(f'GET request to {url}')
-        response = requests.get(url)
-        logger.debug(f'Reponse code: {response.status_code}')
-        response.raise_for_status()
-        #TODO catch
-        time.sleep(REQUEST_DELAY)
-        return response
-
     def _rewrite_doi_url(self, response: requests.Response, doi: str) -> requests.Response:
         """Rewrite the DOI URL if it resolved to a IEEE domain. 
         
@@ -43,7 +33,7 @@ class DoiResolver(PipelineStep):
             return response
         new = f'https://doi.ieeecomputersociety.org/{doi}'
         logger.debug(f'Rewrote URL {response.url} to {new}')
-        return self._make_get_request(new)
+        return utils._make_get_request(new, REQUEST_DELAY)
 
     def run(self) -> None:
         """Run the full resolve process."""
@@ -56,7 +46,7 @@ class DoiResolver(PipelineStep):
                 continue
             
             doi_url = self._build_url(doi)
-            response = self._make_get_request(doi_url)
+            response = utils._make_get_request(doi_url, REQUEST_DELAY)
             
             if self._do_doi_rewrite:
                 response = self._rewrite_doi_url(response, doi)

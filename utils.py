@@ -2,6 +2,8 @@ import json
 import logging
 import typing as tg
 
+import requests
+
 logger = logging.getLogger(__name__)
 
 
@@ -30,3 +32,16 @@ def save_metadata(metadata_file: str, data: tg.List[tg.Dict]) -> None:
         logger.error('Error while saving metadata to file.')
         raise SystemExit()
     logger.debug(f'Finished writing metadata to file {metadata_file}') 
+
+def _make_get_request(url: str, delay: int = 0) -> requests.Response:
+    """Make a GET request to url and return the response if successful."""
+    logger.debug(f'GET request to {url}')
+    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:104.0) Gecko/20100101 Firefox/104.0'}
+    response = requests.get(url, headers=headers)
+    logger.debug(f'Reponse code: {response.status_code}')
+    try:
+        response.raise_for_status()
+    except requests.HTTPError as e:
+        logger.error(f'Bad Reponse from GET requests. {e}')
+        raise SystemExit() 
+    return response

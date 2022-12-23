@@ -4,7 +4,6 @@ import typing as tg
 import webbrowser
 from pathlib import Path
 
-import requests
 from tqdm import tqdm
 
 import utils
@@ -40,18 +39,8 @@ class PdfDownloader(PipelineStep):
             logger.debug(f"Target can be downloaded by requests.")
             return False
 
-    def _make_get_request(self, url: str) -> requests.Response:
-        """Make a GET request to url and return the response if successful."""
-        logger.debug(f'GET request to {url}')
-        headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:104.0) Gecko/20100101 Firefox/104.0'}
-        response = requests.get(url, headers=headers)
-        logger.debug(f'Reponse code: {response.status_code}')
-        response.raise_for_status()
-        #TODO catch
-        return response
-
     def _get_pdf_data(self, pdf_url: str) -> bytes:
-        r = self._make_get_request(pdf_url)
+        r = utils._make_get_request(pdf_url, REQUEST_DELAY)
         content_type = r.headers.get('Content-Type')
         if content_type is None or 'application/pdf' not in content_type:
             logger.error("Resonse from PDF URL didn't contain PDF data. This might be because your IP doesn't have access. Check the logs to see the URL and manually open it to debug.")
