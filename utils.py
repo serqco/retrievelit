@@ -1,6 +1,7 @@
 import json
 import logging
 import typing as tg
+import time
 
 import requests
 
@@ -33,8 +34,9 @@ def save_metadata(metadata_file: str, data: tg.List[tg.Dict]) -> None:
         raise SystemExit()
     logger.debug(f'Finished writing metadata to file {metadata_file}') 
 
-def _make_get_request(url: str, delay: int = 0) -> requests.Response:
+def make_get_request(url: str, delay: int = 0) -> requests.Response:
     """Make a GET request to url and return the response if successful."""
+    time.sleep(delay)
     logger.debug(f'GET request to {url}')
     headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:104.0) Gecko/20100101 Firefox/104.0'}
     response = requests.get(url, headers=headers)

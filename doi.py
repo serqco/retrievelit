@@ -33,7 +33,7 @@ class DoiResolver(PipelineStep):
             return response
         new = f'https://doi.ieeecomputersociety.org/{doi}'
         logger.debug(f'Rewrote URL {response.url} to {new}')
-        return utils._make_get_request(new, REQUEST_DELAY)
+        return utils.make_get_request(new, REQUEST_DELAY)
 
     def run(self) -> None:
         """Run the full resolve process."""
@@ -46,7 +46,7 @@ class DoiResolver(PipelineStep):
                 continue
             
             doi_url = self._build_url(doi)
-            response = utils._make_get_request(doi_url, REQUEST_DELAY)
+            response = utils.make_get_request(doi_url, REQUEST_DELAY)
             
             if self._do_doi_rewrite:
                 response = self._rewrite_doi_url(response, doi)

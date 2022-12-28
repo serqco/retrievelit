@@ -40,7 +40,7 @@ class PdfDownloader(PipelineStep):
             return False
 
     def _get_pdf_data(self, pdf_url: str) -> bytes:
-        r = utils._make_get_request(pdf_url, REQUEST_DELAY)
+        r = utils.make_get_request(pdf_url, REQUEST_DELAY)
         content_type = r.headers.get('Content-Type')
         if content_type is None or 'application/pdf' not in content_type:
             logger.error("Resonse from PDF URL didn't contain PDF data. This might be because your IP doesn't have access. Check the logs to see the URL and manually open it to debug.")
