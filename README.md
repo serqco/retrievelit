@@ -34,6 +34,12 @@ This will download the Volume 35 of `Empirical Software Engineering` and use cla
 The downloader will consider existing filenames in the folders `./EMSE-34` and `./EMSE-33` to avoid name conflicts. 
 Downloads and additional files will be stored in a new folder `./EMSE-35`.
 
+### Notes
+
+#### Downloading Elsevier Publications
+- When using the Mapper `ElsevierMapper` to download Journals published by Elsevier, such as IST (Information and Software Technology), the downloader will use the default webbrowser of the system to get the PDF.
+- For this to work, it is assumed that your browser downloads are located in the `Downloads` folder inside your home directory. If this is not the case, change the variable `download_dir` in the class `PdfDownloader` to include the correct path to your downloads.
+- Note that the downloader is unable to close the new browser windows after getting the PDFs, so you will have to close them manually after a successful run.
 ## How to extend it
 
 ### Adding a venue
