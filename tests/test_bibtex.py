@@ -1,10 +1,10 @@
 import textwrap
-import bibtex
+import bibtex_builder
 
 from pytest_mock import MockerFixture
 
 def test_bibtex(mocker: MockerFixture) -> None:
-    bibtex_builder = bibtex.BibtexBuilder("mocked", "mocked")
+    bibtex_builder_ = bibtex_builder.BibtexBuilder("mocked", "mocked")
     input_data = [{
         "identifier": "identifier",
         "title": "title",
@@ -37,5 +37,5 @@ def test_bibtex(mocker: MockerFixture) -> None:
     mocker.patch('utils.load_metadata', mocker.Mock(return_value=input_data))
     open_mock = mocker.mock_open()
     mocker.patch('builtins.open', open_mock)
-    bibtex_builder.run()
+    bibtex_builder_.run()
     open_mock.return_value.write.assert_called_once_with(expected_data)
