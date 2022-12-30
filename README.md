@@ -12,6 +12,7 @@ retrievelit is written in Python.
 - [How to use it](#how-to-use-it)
   - [Arguments](#arguments)
   - [Example](#example)
+  - [Notes](#notes)
 - [How to extend it](#how-to-extend-it)
   - [Adding a venue](#adding-a-venue)
   - [Creating a new PDF URL mapper](#creating-a-new-pdf-url-mapper)
