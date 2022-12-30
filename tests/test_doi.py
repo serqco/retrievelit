@@ -1,5 +1,5 @@
 import utils
-import doi
+import doi_resolver
 
 import pytest
 from pytest_mock import MockerFixture
@@ -36,8 +36,8 @@ from pytest_mock import MockerFixture
 )
 def test_doi_resolving(do_doi_rewrite, input_data, expected_result, mocker):
     # don't wait between requests since they are read from cassettes
-    doi.REQUEST_DELAY = 0
-    resolver = doi.DoiResolver("", do_doi_rewrite)
+    doi_resolver.REQUEST_DELAY = 0
+    resolver = doi_resolver.DoiResolver("", do_doi_rewrite)
     
     mocker.patch('utils.load_metadata', mocker.Mock(return_value=input_data))
     mocker.patch('utils.save_metadata')
@@ -46,7 +46,7 @@ def test_doi_resolving(do_doi_rewrite, input_data, expected_result, mocker):
     utils.save_metadata.assert_called_with("", expected_result)
 
 def test_invalid_doi_throws_expection(mocker):
-    resolver = doi.DoiResolver("", False)
+    resolver = doi_resolver.DoiResolver("", False)
 
     input_data = [{
         "doi": "invalid_doi"

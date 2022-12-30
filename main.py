@@ -8,11 +8,11 @@ import log_config
 import setup
 import downloader_pipeline
 import mapper_factory
-import bibtex
-import dblp
-import names
-import pdf
-import doi
+import bibtex_builder
+import dblp_downloader
+import name_generator
+import pdf_downloader
+import doi_resolver
 import venues
 
 from doi_pdf_mappers.abstract_doi_mapper import DoiMapper
@@ -112,17 +112,17 @@ def main(args: argparse.Namespace) -> None:
     
     # create pipeline with all downloader steps
     pipeline = downloader_pipeline.DownloaderPipeline(state_file)
-    metadata_downloader = dblp.DblpDownloader(metadata_file, venue, number, grouping)
+    metadata_downloader = dblp_downloader.DblpDownloader(metadata_file, venue, number, grouping)
     pipeline.add_step(metadata_downloader)
-    name_generator = names.NameGenerator(metadata_file, existing_folders, append_keyword=False)
-    pipeline.add_step(name_generator)
-    bibtex_builder = bibtex.BibtexBuilder(metadata_file, bibtex_file)
-    pipeline.add_step(bibtex_builder)
+    name_generator_ = name_generator.NameGenerator(metadata_file, existing_folders, append_keyword=False)
+    pipeline.add_step(name_generator_)
+    bibtex_builder_ = bibtex_builder.BibtexBuilder(metadata_file, bibtex_file)
+    pipeline.add_step(bibtex_builder_)
     if resolve_dois:
-        doi_resolver = doi.DoiResolver(metadata_file, do_doi_rewrite)
-        pipeline.add_step(doi_resolver)
-    pdf_downloader = pdf.PdfDownloader(metadata_file, mapper, target, list_file, resolve_dois)
-    pipeline.add_step(pdf_downloader)
+        doi_resolver_ = doi_resolver.DoiResolver(metadata_file, do_doi_rewrite)
+        pipeline.add_step(doi_resolver_)
+    pdf_downloader_ = pdf_downloader.PdfDownloader(metadata_file, mapper, target, list_file, resolve_dois)
+    pipeline.add_step(pdf_downloader_)
     
     pipeline.run()
     
