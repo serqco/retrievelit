@@ -131,14 +131,21 @@ class DblpDownloader(PipelineStep):
 
     def run(self) -> None:
         """Download the dblp metadata for the specified target and save it to a file."""
+        self._verify_mds_config()
+        # mds = metadata-source
+        self._load_mds_config()
+        
+        # Treat year as volume number for ICSE Technical Track, since we can't distinguish
+        # between Tracks when using the dblp publication API
+        if self._mds_config['acronym'] == 'icse' and self._grouping == 'year':
+            logger.warn(f"Using --grouping=volume instead to download Technical Track of ICSE. See README.md for more information.")
+            self._grouping = 'volume'
+
         logger.debug(f'Downloading metadata for:')
         logger.debug(f'venue: {self._venue}')
         logger.debug(f'year or volume: {self._number}')
         logger.debug(f'grouping: {self._grouping}')
         
-        self._verify_mds_config()
-        # mds = metadata-source
-        self._load_mds_config()
         if self._grouping == 'year':
             raw_data = self._get_data_for_year()
         if self._grouping == 'volume':

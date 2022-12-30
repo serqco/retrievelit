@@ -36,6 +36,11 @@ Downloads and additional files will be stored in a new folder `./EMSE-35`.
 
 ### Notes
 
+#### Downloading ICSE Technical Track with dblp.org
+- Due to limitations of the dblp publication API, downloading the Technical Track of ICSE is only possible when using the option `--grouping=volume` and supplying the publication year as the volume number.
+- Example to download the technical track of ICSE 2021: `python main.py --grouping=volume --mapper=ComputerOrgConf --ieeecs ICSE-2021`
+- All downloads of ICSE using `--grouping=year` will be mapped to `--grouping=volume` while keeping all other options the same.
+
 #### Downloading Elsevier Publications
 - When using the Mapper `ElsevierMapper` to download Journals published by Elsevier, such as IST (Information and Software Technology), the downloader will use the default webbrowser of the system to get the PDF.
 - For this to work, it is assumed that your browser downloads are located in the `Downloads` folder inside your home directory. If this is not the case, change the variable `download_dir` in the class `PdfDownloader` to include the correct path to your downloads.
@@ -103,11 +108,6 @@ A (doi-to-pdf-url) mapper is an object which implements the `get_pdf_url` method
 
 ## TODO
 - functionality:
-  - ICSE-2021 download retrieves 654 items. That is all of ICSE, but we want the "Technical Research" track only,
-    not SEIP, SEET, SEIS, NIER etc.
-  - The .bib file has only author, title, and venue. We need a proper bibliography file, with nearly all
-    fields that dblp offers.
-  - Implement IST (Elsevier) download functionality
   - Metadata file improvements
     - combine `state.json` and `metadata.json`
     - create set schema to validate file and aid in adding new metadata sources
@@ -121,8 +121,6 @@ A (doi-to-pdf-url) mapper is an object which implements the `get_pdf_url` method
   - use request sessions to reduce time for consecutive requests to the same server
 - tech debt reductions:
 - defects:
-  - --grouping=year doesn't work for ICSE (maybe all conferences), since all tracks are included in the publication API and there seems to be no way to distinguish them.
-    Since there is only one conference per year, --grouping=year calls can just be mapped to volume calls.
   - 2022-09-01: TSE-2021 crashed with "No such file or directory: 'TSE-2021/El-HieTür21-$\\mathcal.pdf'"  
     Only few non-letter characters should be let through for the title word, mostly dashes.  
     For the basename, even dashes should be collapsed and 'El-Fakih' should become 'ElF', not 'El-'.
