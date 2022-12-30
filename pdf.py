@@ -104,16 +104,9 @@ class PdfDownloader(PipelineStep):
             root_dir = Path(__file__).resolve().parent
             logger.debug(f"Assuming target folder location at {root_dir}.")
 
-        # TODO implement more robust check
-        # check if there's a failure to get the PDF URL multiple times in a row
-        # which might point to no access.
-        access_check_count = 0
         logger.info('Starting PDF download. This may take a few seconds per PDF.')
 
         for entry in tqdm(self._metadata):
-            if access_check_count > 1:
-                logger.error('Failed to get PDF URL too often - Aborting run. Please check if you have access to the publications, if you need to enable the --ieeecs flag, or if the the metadata-file is corrupted and try again.')
-                raise SystemExit()
 
             if entry.get('pdf'):
                 logger.debug(f'PDF already downloaded for entry {entry}. Skipping.')
@@ -131,7 +124,6 @@ class PdfDownloader(PipelineStep):
             except PdfUrlNotFoundError as e:
                 logger.warning(repr(e))
                 logger.warning(f"No pdf URL found for [resolved] DOI {doi_parameter}. Skipping. If this reoccurs, check if you have access to this publication.")
-                access_check_count += 1
                 continue
             
             # generate filename
@@ -156,5 +148,4 @@ class PdfDownloader(PipelineStep):
 
 
 if __name__ == '__main__':
-    # download_pdfs()
     logger.error('Not a standalone file. Please run the main script instead.')
