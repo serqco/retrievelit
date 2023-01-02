@@ -5,7 +5,7 @@ import sys
 import typing as tg
 
 import log_config
-import setup
+import setup_files
 import downloader_pipeline
 import mapper_factory
 import bibtex_builder
@@ -107,8 +107,8 @@ def main(args: argparse.Namespace) -> None:
     resolve_dois = is_doi_resolving_needed(mapper)
     
     # setup folder and state file
-    file_setup = setup.Setup(target, state_file)
-    file_setup.run()
+    setup = setup_files.Setup(target, state_file)
+    setup.run()
     
     # create pipeline with all downloader steps
     pipeline = downloader_pipeline.DownloaderPipeline(state_file)

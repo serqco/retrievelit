@@ -5,8 +5,11 @@ try/
 .coverage
 /log
 */
-!doi_pdf_mappers/
-!exceptions/
+!src
+!src/retrievelit
+!src/retrievelit/*
 !tests
+!tests/cassettes
+!tests/cassettes/*
 *.bib
 *.list

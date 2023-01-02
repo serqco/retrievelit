@@ -45,7 +45,7 @@ def test_doi_resolving(do_doi_rewrite, input_data, expected_result, mocker):
     resolver.run()
     utils.save_metadata.assert_called_with("", expected_result)
 
-def test_invalid_doi_throws_expection(mocker):
+def test_invalid_doi_throws_exception(mocker):
     resolver = doi_resolver.DoiResolver("", False)
 
     input_data = [{

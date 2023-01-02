@@ -1,7 +1,7 @@
 import logging
 
 from doi_pdf_mappers.abstract_resolved_doi_mapper import ResolvedDoiMapper
-from exceptions.doi_pdf_mappers import PdfUrlNotFoundError
+from exceptions import PdfUrlNotFoundError
 
 logger = logging.getLogger(__name__)
 

@@ -7,7 +7,7 @@ from pathlib import Path
 from tqdm import tqdm
 
 import utils
-from exceptions.doi_pdf_mappers import PdfUrlNotFoundError
+from exceptions import PdfUrlNotFoundError
 from doi_pdf_mappers.abstract_doi_mapper import DoiMapper
 from doi_pdf_mappers.abstract_resolved_doi_mapper import ResolvedDoiMapper
 from doi_pdf_mappers.elsevier import ElsevierMapper
