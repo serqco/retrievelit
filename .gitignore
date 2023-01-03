@@ -7,7 +7,7 @@ try/
 */
 !src
 !src/retrievelit
-!src/retrievelit/*
+!src/retrievelit/doi_pdf_mappers
 !tests
 !tests/cassettes
 !tests/cassettes/*
