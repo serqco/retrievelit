@@ -1,10 +1,10 @@
 import textwrap
-import bibtex_builder
+from retrievelit.bibtex_builder import BibtexBuilder
 
 from pytest_mock import MockerFixture
 
 def test_bibtex(mocker: MockerFixture) -> None:
-    bibtex_builder_ = bibtex_builder.BibtexBuilder("mocked", "mocked")
+    bibtex_builder_ = BibtexBuilder("mocked", "mocked")
     input_data = [{
         "identifier": "identifier",
         "title": "title",
@@ -34,7 +34,7 @@ def test_bibtex(mocker: MockerFixture) -> None:
         }
     """)
     
-    mocker.patch('utils.load_metadata', mocker.Mock(return_value=input_data))
+    mocker.patch('retrievelit.utils.load_metadata', mocker.Mock(return_value=input_data))
     open_mock = mocker.mock_open()
     mocker.patch('builtins.open', open_mock)
     bibtex_builder_.run()

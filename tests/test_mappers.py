@@ -1,12 +1,12 @@
 import requests
 import pytest
 
-from doi_pdf_mappers.acm import AcmMapper
-from doi_pdf_mappers.computer_org_conf import ComputerOrgConfMapper
-from doi_pdf_mappers.computer_org_journal import ComputerOrgJournalMapper
-# from doi_pdf_mappers.html_parser import HtmlParserMapper
-from doi_pdf_mappers.springer import SpringerMapper
-from doi_pdf_mappers.scihub import ScihubMapper
+from retrievelit.doi_pdf_mappers.acm import AcmMapper
+from retrievelit.doi_pdf_mappers.computer_org_conf import ComputerOrgConfMapper
+from retrievelit.doi_pdf_mappers.computer_org_journal import ComputerOrgJournalMapper
+# from retrievelit.doi_pdf_mappers.html_parser import HtmlParserMapper
+from retrievelit.doi_pdf_mappers.springer import SpringerMapper
+from retrievelit.doi_pdf_mappers.scihub import ScihubMapper
 
 inputs = [
     (AcmMapper, "10.1145/3510003.3510096"),
