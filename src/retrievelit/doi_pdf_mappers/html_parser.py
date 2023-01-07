@@ -1,6 +1,6 @@
 from bs4 import BeautifulSoup
-from doi_pdf_mappers.abstract_resolved_doi_mapper import ResolvedDoiMapper
-from exceptions import PdfUrlNotFoundError
+from retrievelit.doi_pdf_mappers.abstract_resolved_doi_mapper import ResolvedDoiMapper
+from retrievelit.exceptions import PdfUrlNotFoundError
 import logging
 import time
 import re

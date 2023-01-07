@@ -1,7 +1,7 @@
 import logging
 import json
 import typing as tg
-from pipeline_step import PipelineStep
+from retrievelit.pipeline_step import PipelineStep
 
 logger = logging.getLogger(__name__)
 

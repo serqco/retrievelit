@@ -4,8 +4,8 @@ import typing as tg
 
 import requests
 
-import utils
-from pipeline_step import PipelineStep
+from retrievelit import utils
+from retrievelit.pipeline_step import PipelineStep
 
 logger = logging.getLogger(__name__)
 

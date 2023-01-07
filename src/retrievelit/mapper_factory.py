@@ -1,8 +1,8 @@
 import logging
 import typing as tg
 
-from doi_pdf_mappers import *  # make sure all mappers have been loaded
-from doi_pdf_mappers import abstract_doi_mapper, abstract_resolved_doi_mapper
+from retrievelit.doi_pdf_mappers import *  # make sure all mappers have been loaded
+from retrievelit.doi_pdf_mappers import abstract_doi_mapper, abstract_resolved_doi_mapper
 
 logger = logging.getLogger(__name__)
 

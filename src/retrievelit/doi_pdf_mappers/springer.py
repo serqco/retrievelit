@@ -1,6 +1,6 @@
 import logging
 
-from doi_pdf_mappers.abstract_doi_mapper import DoiMapper
+from retrievelit.doi_pdf_mappers.abstract_doi_mapper import DoiMapper
 
 logger = logging.getLogger(__name__)
 

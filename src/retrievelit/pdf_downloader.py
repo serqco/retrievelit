@@ -6,12 +6,12 @@ from pathlib import Path
 
 from tqdm import tqdm
 
-import utils
-from exceptions import PdfUrlNotFoundError
-from doi_pdf_mappers.abstract_doi_mapper import DoiMapper
-from doi_pdf_mappers.abstract_resolved_doi_mapper import ResolvedDoiMapper
-from doi_pdf_mappers.elsevier import ElsevierMapper
-from pipeline_step import PipelineStep
+from retrievelit import utils
+from retrievelit.exceptions import PdfUrlNotFoundError
+from retrievelit.doi_pdf_mappers.abstract_doi_mapper import DoiMapper
+from retrievelit.doi_pdf_mappers.abstract_resolved_doi_mapper import ResolvedDoiMapper
+from retrievelit.doi_pdf_mappers.elsevier import ElsevierMapper
+from retrievelit.pipeline_step import PipelineStep
 
 # seconds to wait between get requests (ignoring code execution time inbetween)
 REQUEST_DELAY = 1

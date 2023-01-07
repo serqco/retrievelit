@@ -4,8 +4,8 @@ import time
 import typing as tg
 from tqdm import tqdm
 
-import utils
-from pipeline_step import PipelineStep
+from retrievelit import utils
+from retrievelit.pipeline_step import PipelineStep
 
 logger = logging.getLogger(__name__)
 
