@@ -20,16 +20,23 @@ retrievelit is written in Python.
 - [TODO](#todo)
 
 ## How to install it
+- Clone the repository on your local machine.
+- Install the package by running `pip install .` in the root directory.
+### Development Installation
+To work on this package you have to install it in editable mode. This will allow you to run the package as usual while reflecting all changes you make to the source code, as well as run the test suite.
+
+- Clone the repository on your local machine.
+- Install the package in editable mode to link it to the local files by running `pip install -e .[tests]` in the root directory.
 
 ## How to use it
 ```bash
-python main.py [-h] [--grouping {year,volume}] [--mapper MAPPER] [--metadata {dblp,crossref}] [--ieeecs] target [existing_folders ...]
+retrievelit [-h] [--grouping {year,volume}] [--mapper MAPPER] [--metadata {dblp,crossref}] [--ieeecs] target [existing_folders ...]
 ```
 Call it with `-h` yourself to see an up-to-date description of the options.
 
 ### Example
 ```bash
-python main.py --grouping=volume --mapper=Springer EMSE-35 EMSE-34 EMSE-33
+retrievelit --grouping=volume --mapper=Springer EMSE-35 EMSE-34 EMSE-33
 ```
 This will download the Volume 35 of `Empirical Software Engineering` and use class `SpringerMapper` to generate the PDF URLs.
 The downloader will consider existing filenames in the folders `./EMSE-34` and `./EMSE-33` to avoid name conflicts. 
@@ -39,7 +46,7 @@ Downloads and additional files will be stored in a new folder `./EMSE-35`.
 
 #### Downloading ICSE Technical Track with dblp.org
 - Due to limitations of the dblp publication API, downloading the Technical Track of ICSE is only possible when using the option `--grouping=volume` and supplying the publication year as the volume number.
-- Example to download the technical track of ICSE 2021: `python main.py --grouping=volume --mapper=ComputerOrgConf --ieeecs ICSE-2021`
+- Example to download the technical track of ICSE 2021: `retrievelit --grouping=volume --mapper=ComputerOrgConf --ieeecs ICSE-2021`
 - All downloads of ICSE using `--grouping=year` will be mapped to `--grouping=volume` while keeping all other options the same.
 
 #### Downloading Elsevier Publications
@@ -113,6 +120,7 @@ A (doi-to-pdf-url) mapper is an object which implements the `get_pdf_url` method
     - combine `state.json` and `metadata.json`
     - create set schema to validate file and aid in adding new metadata sources
     - include additional information (dts of retrieval, downloader configuration, etc.)
+  - upload package to pip
 - usability improvements:
   - check arguments before using them
   - terminate with clear error messages (instead of crashing) upon unsuitable call arguments. 
