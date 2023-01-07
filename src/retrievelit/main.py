@@ -4,19 +4,19 @@ import os
 import sys
 import typing as tg
 
-import log_config
-import setup_files
-import downloader_pipeline
-import mapper_factory
-import bibtex_builder
-import dblp_downloader
-import name_generator
-import pdf_downloader
-import doi_resolver
-import venues
+from retrievelit import log_config
+from retrievelit import setup_files
+from retrievelit import downloader_pipeline
+from retrievelit import mapper_factory
+from retrievelit import bibtex_builder
+from retrievelit import dblp_downloader
+from retrievelit import name_generator
+from retrievelit import pdf_downloader
+from retrievelit import doi_resolver
+from retrievelit import venues
 
-from doi_pdf_mappers.abstract_doi_mapper import DoiMapper
-from doi_pdf_mappers.abstract_resolved_doi_mapper import ResolvedDoiMapper
+from retrievelit.doi_pdf_mappers.abstract_doi_mapper import DoiMapper
+from retrievelit.doi_pdf_mappers.abstract_resolved_doi_mapper import ResolvedDoiMapper
 
 # disable logging from urllib3 library (used by requests)
 logging.getLogger('urllib3').setLevel(logging.ERROR)
@@ -85,9 +85,12 @@ def delete_files(files: tg.Sequence[str]) -> None:
     logger.info('Finished deleting files.')
     
 
-def main(args: argparse.Namespace) -> None:
-    """Run the downloader pipeline using the settings in args."""
+def main() -> None:
+    """Run the downloader."""
+    parser = create_parser()
+    args = parser.parse_args()
     logger.debug(f'Configuration: {vars(args)}')
+
     target = args.target
     metadata_source = args.metadata
     existing_folders = args.existing_folders
@@ -99,48 +102,43 @@ def main(args: argparse.Namespace) -> None:
     metadata_file = f'{target}-metadata.json'
     bibtex_file = f'{target}-{metadata_source}.bib'
     list_file = f'{target}.list'
-    
-    venue = get_venue(target)
-    number = get_number(target)
-    
-    mapper = mapper_factory.get_mapper(mapper_name)
-    resolve_dois = is_doi_resolving_needed(mapper)
-    
-    # setup folder and state file
-    setup = setup_files.Setup(target, state_file)
-    setup.run()
-    
-    # create pipeline with all downloader steps
-    pipeline = downloader_pipeline.DownloaderPipeline(state_file)
-    metadata_downloader = dblp_downloader.DblpDownloader(metadata_file, venue, number, grouping)
-    pipeline.add_step(metadata_downloader)
-    name_generator_ = name_generator.NameGenerator(metadata_file, existing_folders, append_keyword=False)
-    pipeline.add_step(name_generator_)
-    bibtex_builder_ = bibtex_builder.BibtexBuilder(metadata_file, bibtex_file)
-    pipeline.add_step(bibtex_builder_)
-    if resolve_dois:
-        doi_resolver_ = doi_resolver.DoiResolver(metadata_file, do_doi_rewrite)
-        pipeline.add_step(doi_resolver_)
-    pdf_downloader_ = pdf_downloader.PdfDownloader(metadata_file, mapper, target, list_file, resolve_dois)
-    pipeline.add_step(pdf_downloader_)
-    
-    pipeline.run()
-    
-    delete_files([state_file])
 
-    logger.info('Exiting.')
-
-
-if __name__ == '__main__':
-    # get cli arguments
-    parser = create_parser()
-    args = parser.parse_args()
     try:
-        main(args)
-    except SystemExit:
+        venue = get_venue(target)
+        number = get_number(target)
+        
+        mapper = mapper_factory.get_mapper(mapper_name)
+        resolve_dois = is_doi_resolving_needed(mapper)
+        
+        # setup folder and state file
+        setup = setup_files.Setup(target, state_file)
+        setup.run()
+        
+        # create pipeline with all downloader steps
+        pipeline = downloader_pipeline.DownloaderPipeline(state_file)
+        metadata_downloader = dblp_downloader.DblpDownloader(metadata_file, venue, number, grouping)
+        pipeline.add_step(metadata_downloader)
+        name_generator_ = name_generator.NameGenerator(metadata_file, existing_folders, append_keyword=False)
+        pipeline.add_step(name_generator_)
+        bibtex_builder_ = bibtex_builder.BibtexBuilder(metadata_file, bibtex_file)
+        pipeline.add_step(bibtex_builder_)
+        if resolve_dois:
+            doi_resolver_ = doi_resolver.DoiResolver(metadata_file, do_doi_rewrite)
+            pipeline.add_step(doi_resolver_)
+        pdf_downloader_ = pdf_downloader.PdfDownloader(metadata_file, mapper, target, list_file, resolve_dois)
+        pipeline.add_step(pdf_downloader_)
+        
+        pipeline.run()
+        
+        delete_files([state_file])
         logger.info('Exiting.')
+    except SystemExit:
+        logger.info('Exiting!')
         sys.exit(1)
     except KeyboardInterrupt:
         logger.error('Manual interruption - cancelling.')
         sys.exit(1)
-    
+
+
+if __name__ == '__main__':
+    main()
