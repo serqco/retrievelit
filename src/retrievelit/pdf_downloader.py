@@ -59,7 +59,7 @@ class PdfDownloader(PipelineStep):
         self._store_pdf(pdf_data, filename)
     
     def _download_pdf_with_webbrowser(self, pdf_url: str, filename: str,
-                                      download_dir: Path, root_dir: Path) -> None:
+                                      download_dir: Path) -> None:
         """Use the webbrowser module to download the PDF and store it in `filename`."""
         def is_download_finished(file: Path) -> bool:
             """Check if the PDF file download can be assumed to be complete."""
@@ -82,7 +82,7 @@ class PdfDownloader(PipelineStep):
             time.sleep(2)
 
         logger.debug(f"Finished downloading file {pdf_file}.")
-        new_path = Path.joinpath(root_dir, filename)
+        new_path = Path.joinpath(Path(), filename)
         logger.debug(f"Moving and renaming file to {new_path}.")
         pdf_file.rename(new_path)
         
@@ -100,9 +100,6 @@ class PdfDownloader(PipelineStep):
             download_dir = Path.joinpath(Path.home(), 'Downloads')
             logger.info(f"Assuming browser downloads in {str(download_dir)}."
                         " If this is incorrect, please overwrite `download_dir` in `PdfDownloader` with the correct value.")
-            # TODO change when reworking folder structure 
-            root_dir = Path(__file__).resolve().parent
-            logger.debug(f"Assuming target folder location at {root_dir}.")
 
         logger.info('Starting PDF download. This may take a few seconds per PDF.')
 
@@ -134,7 +131,7 @@ class PdfDownloader(PipelineStep):
             filename = f"{self._folder_name}/{entry.get('identifier')}.pdf"
             
             if self._use_webbrowser:
-                self._download_pdf_with_webbrowser(pdf_url, filename, download_dir, root_dir)
+                self._download_pdf_with_webbrowser(pdf_url, filename, download_dir)
             else:
                 self._download_pdf_with_requests(pdf_url, filename)
             time.sleep(REQUEST_DELAY)
