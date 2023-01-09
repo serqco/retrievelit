@@ -20,11 +20,11 @@ logger = logging.getLogger(__name__)
 
 class PdfDownloader(PipelineStep):
     """Download the article PDFs and write the filepath to the list file."""
-    def __init__(self, metadata_file: str, doi_pdf_mapper: tg.Union[DoiMapper, ResolvedDoiMapper], 
-                 folder_name: str, list_file: str, dois_resolved: bool) -> None:
+    def __init__(self, metadata_file: Path, doi_pdf_mapper: tg.Union[DoiMapper, ResolvedDoiMapper], 
+                 target_dir: Path, list_file: Path, dois_resolved: bool) -> None:
         self._metadata_file = metadata_file
         self._mapper = doi_pdf_mapper
-        self._folder_name = folder_name
+        self._target_dir = target_dir
         self._list_file = list_file
         self._dois_resolved = dois_resolved
         self._metadata: tg.List = []
@@ -47,18 +47,18 @@ class PdfDownloader(PipelineStep):
             raise SystemExit()
         return r.content
 
-    def _store_pdf(self, pdf_data: bytes, filename: str) -> None:
+    def _store_pdf(self, pdf_data: bytes, pdf_path: Path) -> None:
         """Write pdf_data to a file."""
-        with open(filename, 'wb') as f:
+        with open(pdf_path, 'wb') as f:
             f.write(pdf_data)
-        logger.debug(f'Wrote PDF to file {filename}')
+        logger.debug(f'Wrote PDF to file {pdf_path}')
     
-    def _download_pdf_with_requests(self, pdf_url: str, filename: str) -> None:
+    def _download_pdf_with_requests(self, pdf_url: str, pdf_path: Path) -> None:
         """Use requests to download the PDF and store it in `filename`."""
         pdf_data = self._get_pdf_data(pdf_url)
-        self._store_pdf(pdf_data, filename)
+        self._store_pdf(pdf_data, pdf_path)
     
-    def _download_pdf_with_webbrowser(self, pdf_url: str, filename: str,
+    def _download_pdf_with_webbrowser(self, pdf_url: str, pdf_path: Path,
                                       download_dir: Path) -> None:
         """Use the webbrowser module to download the PDF and store it in `filename`."""
         def is_download_finished(file: Path) -> bool:
@@ -82,14 +82,14 @@ class PdfDownloader(PipelineStep):
             time.sleep(2)
 
         logger.debug(f"Finished downloading file {pdf_file}.")
-        new_path = Path.joinpath(Path(), filename)
+        new_path = Path.joinpath(Path(), pdf_path)
         logger.debug(f"Moving and renaming file to {new_path}.")
         pdf_file.rename(new_path)
         
-    def _add_to_list(self, pdf_path: str) -> None:
+    def _add_to_list(self, pdf_path: Path) -> None:
         """Append the pdf filepath to the list file."""
         with open(self._list_file, 'a') as f:
-            f.write(f'{pdf_path}\n')
+            f.write(f'{pdf_path.as_posix()}\n')
         logger.debug(f'Added {pdf_path} to {self._list_file}.')
 
     def run(self) -> None:
@@ -127,19 +127,18 @@ class PdfDownloader(PipelineStep):
             if not entry.get('identifier'):
                 logger.warning(f'No identifier found in entry {entry}. Skipping.')
                 continue
-            # TODO change when reworking folder structure
-            filename = f"{self._folder_name}/{entry.get('identifier')}.pdf"
+            pdf_path = Path.joinpath(self._target_dir, f"{entry.get('identifier')}.pdf")
             
             if self._use_webbrowser:
-                self._download_pdf_with_webbrowser(pdf_url, filename, download_dir)
+                self._download_pdf_with_webbrowser(pdf_url, pdf_path, download_dir)
             else:
-                self._download_pdf_with_requests(pdf_url, filename)
+                self._download_pdf_with_requests(pdf_url, pdf_path)
             time.sleep(REQUEST_DELAY)
 
             # this might lead to duplicate entries in the .list file
             # since it can get interrupted between appending to list file and saving the state
             # so we would append twice (can read in first and add to set if needed to combat this)
-            self._add_to_list(filename)
+            self._add_to_list(pdf_path)
             entry['pdf'] = True
             utils.save_metadata(self._metadata_file, self._metadata)
 

@@ -1,5 +1,6 @@
 import logging
 import typing as tg
+from pathlib import Path
 
 from retrievelit import utils
 from retrievelit.pipeline_step import PipelineStep
@@ -14,7 +15,7 @@ class NameGenerator(PipelineStep):
     otherwise three lastname starting letters of up to 3 authors.
     If append_keyword is given, add the first non-stopword title word. 
     """
-    def __init__(self, metadata_file: str, existing_folders: tg.List[str], append_keyword: bool = False):
+    def __init__(self, metadata_file: Path, existing_folders: tg.List[str], append_keyword: bool = False):
         self._metadata_file = metadata_file
         self._existing_folders = existing_folders
         self._existing_names: tg.List = []
@@ -22,6 +23,7 @@ class NameGenerator(PipelineStep):
         self._stopwords: tg.List = []
         self._metadata: tg.List = []
     
+    # TODO look for .txt file in relation to current file instead of working dir
     def _load_stopwords(self) -> None:
         """Load the stopwords from the file and store them in self._stopwords."""
         logger.debug('Loading stopwords.')
@@ -44,7 +46,8 @@ class NameGenerator(PipelineStep):
         # since names are generated in one step, so if we get to here,
         # we want to regenerate all names anyways.
         logger.debug('Loading existing names.')
-        list_files = [f'{folder}.list' for folder in self._existing_folders]
+        # TODO maybe pass both the folder paths as well as the target names from main, so we don't have the `metadata` folder name hardcoded here?
+        list_files = [Path(f'{folder}/metadata/{folder}.list') for folder in self._existing_folders]
 
         for list_file in list_files:
             logger.debug(f'Reading names from file {list_file}')

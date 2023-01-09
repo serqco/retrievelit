@@ -1,7 +1,8 @@
 import logging
 import requests
-import time
 import typing as tg
+from pathlib import Path
+
 from tqdm import tqdm
 
 from retrievelit import utils
@@ -13,7 +14,7 @@ REQUEST_DELAY = 1
 
 class DoiResolver(PipelineStep):
     """Resolve the DOI by sending a GET request to the DOI and following all redirects."""
-    def __init__(self, metadata_file: str, do_doi_rewrite: bool) -> None:
+    def __init__(self, metadata_file: Path, do_doi_rewrite: bool) -> None:
         self._metadata_file = metadata_file
         self._do_doi_rewrite = do_doi_rewrite
         self._metadata: tg.List = []

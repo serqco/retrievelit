@@ -1,5 +1,6 @@
 import logging
 import typing as tg
+from pathlib import Path
 
 import bibtexparser
 
@@ -10,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 class BibtexBuilder(PipelineStep):
     """Populate the bibtex file based on the data in metadata_file."""
-    def __init__(self, metadata_file: str, bibtex_file: str):
+    def __init__(self, metadata_file: Path, bibtex_file: Path):
         self._metadata_file = metadata_file
         self._bibtex_file = bibtex_file
         self._metadata: tg.List = []

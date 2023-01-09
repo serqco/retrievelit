@@ -1,6 +1,8 @@
 import logging
 import json
 import typing as tg
+from pathlib import Path
+
 from retrievelit.pipeline_step import PipelineStep
 
 logger = logging.getLogger(__name__)
@@ -8,7 +10,7 @@ logger = logging.getLogger(__name__)
 class DownloaderPipeline():
     """Class to define and execute the pipeline of the downloader."""
     # TODO add proper docstring for public methods.
-    def __init__(self, state_file: str) -> None:
+    def __init__(self, state_file: Path) -> None:
         self._state_file = state_file
         self._state: tg.Dict = {}
         self._steps: tg.List = []

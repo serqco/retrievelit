@@ -3,6 +3,7 @@ import logging
 import os
 import sys
 import typing as tg
+from pathlib import Path
 
 from retrievelit import log_config
 from retrievelit import setup_files
@@ -72,18 +73,6 @@ def is_doi_resolving_needed(mapper: tg.Union[DoiMapper, ResolvedDoiMapper]) -> b
         logger.error(f"Class {type(mapper)} doesn't inherit from DoiMapper, nor ResolvedDoiMapper.")
         raise SystemExit()
 
-#TODO maybe own class
-def delete_files(files: tg.Sequence[str]) -> None:
-    """Delete the specified files."""
-    logger.info('Deleting intermediate files.')
-    for f in files:
-        try:
-            os.remove(f)
-            logger.debug(f'Deleted file {f}.')
-        except FileNotFoundError:
-            logger.warning(f'Could not find file {f} for deletion.')
-    logger.info('Finished deleting files.')
-    
 
 def main() -> None:
     """Run the downloader."""
@@ -98,10 +87,12 @@ def main() -> None:
     grouping = args.grouping
     mapper_name = args.mapper
 
-    state_file = f'{target}_state.json'
-    metadata_file = f'{target}-metadata.json'
-    bibtex_file = f'{target}-{metadata_source}.bib'
-    list_file = f'{target}.list'
+    target_dir = Path(target)
+    metadata_dir = Path.joinpath(target_dir, 'metadata')
+    state_file = Path.joinpath(metadata_dir, f'{target}-state.json')
+    metadata_file = Path.joinpath(metadata_dir, f'{target}-metadata.json')
+    bibtex_file = Path.joinpath(metadata_dir, f'{target}-{metadata_source}.bib')
+    list_file = Path.joinpath(metadata_dir, f'{target}.list')
 
     try:
         venue = get_venue(target)
@@ -111,7 +102,7 @@ def main() -> None:
         resolve_dois = is_doi_resolving_needed(mapper)
         
         # setup folder and state file
-        setup = setup_files.Setup(target, state_file)
+        setup = setup_files.Setup(metadata_dir, state_file)
         setup.run()
         
         # create pipeline with all downloader steps
@@ -125,12 +116,11 @@ def main() -> None:
         if resolve_dois:
             doi_resolver_ = doi_resolver.DoiResolver(metadata_file, do_doi_rewrite)
             pipeline.add_step(doi_resolver_)
-        pdf_downloader_ = pdf_downloader.PdfDownloader(metadata_file, mapper, target, list_file, resolve_dois)
+        pdf_downloader_ = pdf_downloader.PdfDownloader(metadata_file, mapper, target_dir, list_file, resolve_dois)
         pipeline.add_step(pdf_downloader_)
         
         pipeline.run()
         
-        delete_files([state_file])
         logger.info('Exiting.')
     except SystemExit:
         logger.info('Exiting!')
