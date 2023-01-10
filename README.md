@@ -40,7 +40,14 @@ retrievelit --grouping=volume --mapper=Springer EMSE-35 EMSE-34 EMSE-33
 ```
 This will download the Volume 35 of `Empirical Software Engineering` and use class `SpringerMapper` to generate the PDF URLs.
 The downloader will consider existing filenames in the folders `./EMSE-34` and `./EMSE-33` to avoid name conflicts. 
-Downloads and additional files will be stored in a new folder `./EMSE-35`.
+The downloaded PDFs will be stored in a new folder `./EMSE-35`.
+In the folder `./EMSE-35/metadata` the following files will be created:
+- `EMSE-16-dblp.json`.
+  - Contains the corpus metadata as well as information about the downloader run such as the run configuration and the current state in a JSON object.
+- `EMSE-16-dblp.bib`.
+  - Contains the corpus metadata in the BibTeX format.
+- `EMSE-16-dblp.list`.
+  - Contains the local path from the working directory to each downloaded PDF file in the target folder.
 
 ### Notes
 
@@ -116,10 +123,7 @@ A (doi-to-pdf-url) mapper is an object which implements the `get_pdf_url` method
 
 ## TODO
 - functionality:
-  - Metadata file improvements
-    - combine `state.json` and `metadata.json`
-    - create set schema to validate file and aid in adding new metadata sources
-    - include additional information (dts of retrieval, downloader configuration, etc.)
+  - add timestamps of metadata retrieval, pdf download, etc. to metadata file if needed
   - upload package to pip
 - usability improvements:
   - check arguments before using them

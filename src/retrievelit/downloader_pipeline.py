@@ -10,23 +10,30 @@ logger = logging.getLogger(__name__)
 class DownloaderPipeline():
     """Class to define and execute the pipeline of the downloader."""
     # TODO add proper docstring for public methods.
-    def __init__(self, state_file: Path) -> None:
-        self._state_file = state_file
+    def __init__(self, metadata_file: Path) -> None:
+        self._metadata_file = metadata_file
         self._state: tg.Dict = {}
         self._steps: tg.List = []
     
     def _load_state(self) -> None:
-        """Open the state file and load its contents."""
+        """Load the state from the metadata file."""
         logger.info('Loading state.')
-        with open(self._state_file, 'r') as f:
-            state = json.load(f)
-        self._state = state
+        with open(self._metadata_file, 'r', encoding="utf8") as f:
+            metadata = json.load(f)
+        try:
+            self._state = metadata['state']
+        except KeyError:
+            logger.error(f"Metadata file {self._metadata_file} does not contain state.")
+            raise SystemExit()
     
     def _save_state(self) -> None:
-        """Save the current state to the state file."""
-        logger.debug('Saving state file.')
-        with open(self._state_file, 'w') as f:
-            f.write(json.dumps(self._state))
+        """Save the current state to the metadata file."""
+        logger.debug('Saving state to metadata file.')
+        with open(self._metadata_file, 'r', encoding="utf8") as f:
+            metadata = json.load(f)
+        metadata['state'] = self._state
+        with open(self._metadata_file, 'w', encoding="utf8") as f:
+            f.write(json.dumps(metadata, ensure_ascii=False, indent=2, sort_keys=True))
         logger.debug('Finished saving state.')
     
     def add_step(self, step: PipelineStep) -> None:

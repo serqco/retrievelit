@@ -88,7 +88,7 @@ class PdfDownloader(PipelineStep):
         
     def _add_to_list(self, pdf_path: Path) -> None:
         """Append the pdf filepath to the list file."""
-        with open(self._list_file, 'a') as f:
+        with open(self._list_file, 'a', encoding='utf8') as f:
             f.write(f'{pdf_path.as_posix()}\n')
         logger.debug(f'Added {pdf_path} to {self._list_file}.')
 

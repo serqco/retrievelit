@@ -89,10 +89,9 @@ def main() -> None:
 
     target_dir = Path(target)
     metadata_dir = Path.joinpath(target_dir, 'metadata')
-    state_file = Path.joinpath(metadata_dir, f'{target}-state.json')
-    metadata_file = Path.joinpath(metadata_dir, f'{target}-metadata.json')
+    metadata_file = Path.joinpath(metadata_dir, f'{target}-{metadata_source}.json')
     bibtex_file = Path.joinpath(metadata_dir, f'{target}-{metadata_source}.bib')
-    list_file = Path.joinpath(metadata_dir, f'{target}.list')
+    list_file = Path.joinpath(metadata_dir, f'{target}-{metadata_source}.list')
 
     try:
         venue = get_venue(target)
@@ -102,11 +101,11 @@ def main() -> None:
         resolve_dois = is_doi_resolving_needed(mapper)
         
         # setup folder and state file
-        setup = setup_files.Setup(metadata_dir, state_file)
+        setup = setup_files.Setup(metadata_dir, metadata_file, vars(args))
         setup.run()
         
         # create pipeline with all downloader steps
-        pipeline = downloader_pipeline.DownloaderPipeline(state_file)
+        pipeline = downloader_pipeline.DownloaderPipeline(metadata_file)
         metadata_downloader = dblp_downloader.DblpDownloader(metadata_file, venue, number, grouping)
         pipeline.add_step(metadata_downloader)
         name_generator_ = name_generator.NameGenerator(metadata_file, existing_folders, append_keyword=False)
