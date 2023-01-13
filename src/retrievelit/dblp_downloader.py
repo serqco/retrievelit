@@ -32,7 +32,13 @@ class DblpDownloader(PipelineStep):
             if not venue_type: raise ValueError('\'type\'')
             if not acronym: raise ValueError('\'acronym\'')
         except (KeyError, ValueError) as e:
-            logger.error(f"Value missing from venues.py: {str(e)}. Please make sure the configuration adheres to the expected format, or try another metadata-source.")
+            logger.error(f"Value missing from venues.py: {str(e)}. Please make sure the configuration"
+                          "adheres to the expected format, or try another metadata-source.")
+            raise SystemExit()
+        allowed_venue_types = ['journals', 'conf']
+        if venue_type not in allowed_venue_types:
+            logger.error("Incorrect value for 'type' in 'venues.py' configuration."
+                         f"Value must be one of {allowed_venue_types}. Value is '{venue_type}'.")
             raise SystemExit()
 
     def _load_mds_config(self) -> None:
