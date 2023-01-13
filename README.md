@@ -136,7 +136,6 @@ A (doi-to-pdf-url) mapper is an object which implements the `get_pdf_url` method
 - defects:
   - 2022-09-01: TSE-2021 crashed with "No such file or directory: 'TSE-2021/El-HieTür21-$\\mathcal.pdf'"  
     Only few non-letter characters should be let through for the title word, mostly dashes.  
-    For the basename, even dashes should be collapsed and 'El-Fakih' should become 'ElF', not 'El-'.
 - documentation:
 - quality assurance:
   - add test suite

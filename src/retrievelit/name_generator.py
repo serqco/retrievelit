@@ -1,4 +1,5 @@
 import logging
+import re
 import typing as tg
 from pathlib import Path
 
@@ -74,6 +75,8 @@ class NameGenerator(PipelineStep):
         # if 1 author, full first word of last name
         author_part = ""
         surnames = [name.split()[-1] for name in article['authors'][:3]]
+        pattern = re.compile('[\W_]+')
+        surnames = [re.sub(pattern, '', name) for name in surnames]
         if len(surnames) == 1:
             author_part += surnames[0]
         if len(surnames) > 1:
