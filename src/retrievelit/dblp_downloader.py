@@ -7,6 +7,7 @@ import requests
 
 from retrievelit import utils
 from retrievelit.pipeline_step import PipelineStep
+from retrievelit.exceptions import NoEntriesReceivedError
 
 logger = logging.getLogger(__name__)
 
@@ -60,7 +61,8 @@ class DblpDownloader(PipelineStep):
             total = int(hits['@total'])
             logger.debug(f"Received {received} entries. Amount in collection: {total}.")
             if hits['@sent'] == '0':
-                logger.warning('No entries received. This might be due to the hard cap of 10000 computed entries. If you are downloading entries older than ~15 years, please download a specific volume instead.')
+                logger.warning('No entries received. This might be due to the hard cap of 10000 computed entries.'
+                               'If you are downloading entries older than ~15 years, please download a specific volume instead.')
                 break
             entries.extend(hits['hit'])
             if received >= total:
@@ -70,6 +72,8 @@ class DblpDownloader(PipelineStep):
             offset += 1000
             time.sleep(1)
             
+        if not entries:
+            raise NoEntriesReceivedError()
         logger.debug(f"{len(entries)} entries received from publ API.")
         logger.debug("Filtering out entries from other years.")
         year_entries = [e for e in entries if e['info']['year'] == self._number]
@@ -96,6 +100,8 @@ class DblpDownloader(PipelineStep):
         """Download the metadata of the venue for the specified volume."""
         volume_url = self._build_volume_url()
         data = self._get_data(volume_url)
+        if data['result']['hits']['@total'] == "0":
+            raise NoEntriesReceivedError()
         entries = data['result']['hits']['hit']
         logger.debug(f"Received {len(entries)} entries for volume {self._number}.")
         return entries
@@ -153,10 +159,19 @@ class DblpDownloader(PipelineStep):
         logger.debug(f'year or volume: {self._number}')
         logger.debug(f'grouping: {self._grouping}')
         
-        if self._grouping == 'year':
-            raw_data = self._get_data_for_year()
-        if self._grouping == 'volume':
-            raw_data = self._get_data_for_volume()
+        try:
+            if self._grouping == 'year':
+                raw_data = self._get_data_for_year()
+            if self._grouping == 'volume':
+                raw_data = self._get_data_for_volume()
+        except NoEntriesReceivedError:
+            logger.error("No entries received from publ API."
+                         f"This could be due to an incorrect volume/year value"
+                         f" (current value is '{self._number}' for grouping '{self._grouping}')"
+                         ", an incorrect value in the 'acronym' field in 'venues.py'"
+                         " or a combination of 'type' and 'acronym' that doesn't exist."
+                         f" Current values: {self._mds_config}.")
+            raise SystemExit()
 
         logger.debug('Metadata received.')
         logger.debug('Rewriting data in uniform format.')
