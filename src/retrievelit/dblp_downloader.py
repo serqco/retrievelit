@@ -115,6 +115,9 @@ class DblpDownloader(PipelineStep):
             keys = ['title', 'volume', 'number', 'pages', 'year', 'type', 'doi']
             # only journals have volume and number fields
             entry = {key: publication.get(key) for key in keys}
+            if not entry.get('doi'):
+                logger.warning(f"Dropped entry without DOI: {publication}")
+                continue
             # dblp returns DOIs in uppercase, which e. g. SciHub can't handle.
             entry['doi'] = entry['doi'].lower()
             entry['venue'] = self._venue['name']
@@ -148,8 +151,8 @@ class DblpDownloader(PipelineStep):
         # mds = metadata-source
         self._load_mds_config()
         
-        # Treat year as volume number for ICSE Technical Track, since we can't distinguish
-        # between Tracks when using the dblp publication API
+        # Treat year as volume number for ICSE Technical Track, since it's hard to distinguish
+        # between Tracks when using the dblp publication API because of result cap
         if self._mds_config['acronym'] == 'icse' and self._grouping == 'year':
             logger.warn(f"Using --grouping=volume instead to download Technical Track of ICSE. See README.md for more information.")
             self._grouping = 'volume'
