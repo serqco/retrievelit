@@ -30,7 +30,7 @@ To work on this package you have to install it in editable mode. This will allow
 
 ## How to use it
 ```bash
-retrievelit [-h] [--grouping {year,volume}] [--mapper MAPPER] [--metadata {dblp,crossref}] [--ieeecs] target [existing_folders ...]
+retrievelit [-h] [--grouping {year,volume}] [--mapper MAPPER] [--metadata {dblp,crossref}] [--ieeecs] [--longname] target [existing_folders ...]
 ```
 Call it with `-h` yourself to see an up-to-date description of the options.
 
@@ -124,18 +124,10 @@ A (doi-to-pdf-url) mapper is an object which implements the `get_pdf_url` method
 ## TODO
 - functionality:
   - add timestamps of metadata retrieval, pdf download, etc. to metadata file if needed
-  - upload package to pip
 - usability improvements:
-  - check arguments before using them
-  - terminate with clear error messages (instead of crashing) upon unsuitable call arguments. 
-  - I am no longer convinced that the title word in citation keys and PDF filenames is useful.
-    (even once it works better and ignores stopwords)
-    I suggest to leave it out by default and only add it if `--longname` is given.
   - use request sessions to reduce time for consecutive requests to the same server
 - tech debt reductions:
 - defects:
-  - 2022-09-01: TSE-2021 crashed with "No such file or directory: 'TSE-2021/El-HieTür21-$\\mathcal.pdf'"  
-    Only few non-letter characters should be let through for the title word, mostly dashes.  
 - documentation:
 - quality assurance:
   - add test suite
