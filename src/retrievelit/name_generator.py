@@ -75,6 +75,7 @@ class NameGenerator(PipelineStep):
         # if 1 author, full first word of last name
         author_part = ""
         surnames = [name.split()[-1] for name in article['authors'][:3]]
+        # matches any symbols, but no alphanumeric chars, umlauts, etc.
         pattern = re.compile('[\W_]+')
         surnames = [re.sub(pattern, '', name) for name in surnames]
         if len(surnames) == 1:
@@ -87,10 +88,12 @@ class NameGenerator(PipelineStep):
 
         if self._append_keyword:
             # titles such as "FACER: An API..." should lead to output "facer" (without ":")
-            # while still keeping non-latin chars, so we strip of punctuation
+            # while still keeping non-latin chars and dashes, so we strip of everything else
             title = [e.lower() for e in article['title'].split()]
             title_no_stopwords = [e for e in title if e not in self._stopwords]
-            title_part = "-" + title_no_stopwords[0].strip(":;,.#@%^&*()-_+=!?<>/\\{}[]")
+            # same pattern as above, but excludes dashes
+            pattern = re.compile('(?!-)([\W_])')
+            title_part = "-" + re.sub(pattern, '', title_no_stopwords[0])
         else:
             title_part = ""
         appendices = [''] + [chr(i) for i in range(97,123)]
@@ -101,8 +104,8 @@ class NameGenerator(PipelineStep):
                 logger.debug("Name is unique.")
                 return full_name
             logger.debug('Name not unique. Trying new name.')
-        #TODO better exception + logging
-        raise Exception("Couldn't find free name!")
+        logger.error(f"No free name available. This should not happen. Check the log file for more information.")
+        raise SystemExit()
 
     def run(self) -> None:
         """Generate the identifiers for all articles, respecting existing names in the provided folders of previous runs."""
