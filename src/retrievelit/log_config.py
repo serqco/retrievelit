@@ -27,6 +27,7 @@ LOGGING_CONFIG = {
             'level': 'DEBUG',
             'class': 'logging.handlers.RotatingFileHandler',
             'filename': filename,
+            'encoding': 'UTF-8',
             'backupCount': 3,
         },
         'console': {

@@ -22,7 +22,6 @@ from retrievelit.doi_pdf_mappers.abstract_resolved_doi_mapper import ResolvedDoi
 # disable logging from urllib3 library (used by requests)
 logging.getLogger('urllib3').setLevel(logging.ERROR)
 
-# TODO logger doesn't use utf-8 right now
 logger = logging.getLogger(__name__)
 
 def create_parser() -> argparse.ArgumentParser:
