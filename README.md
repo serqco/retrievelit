@@ -123,6 +123,7 @@ A (doi-to-pdf-url) mapper is an object which implements the `get_pdf_url` method
 
 ## TODO
 - functionality:
+  - add option to download different ICSE Tracks
   - add timestamps of metadata retrieval, pdf download, etc. to metadata file if needed
 - usability improvements:
   - use request sessions to reduce time for consecutive requests to the same server
