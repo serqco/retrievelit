@@ -165,12 +165,13 @@ class DblpDownloader(PipelineStep):
             if self._grouping == 'volume':
                 raw_data = self._get_data_for_volume()
         except NoEntriesReceivedError:
-            logger.error("No entries received from publ API."
-                         f"This could be due to an incorrect volume/year value"
-                         f" (current value is '{self._number}' for grouping '{self._grouping}')"
-                         ", an incorrect value in the 'acronym' field in 'venues.py'"
-                         " or a combination of 'type' and 'acronym' that doesn't exist."
-                         f" Current values: {self._mds_config}.")
+            logger.error("No entries received from publ API. This could be due to:\n"
+                         f"- an incorrect volume/year value (current value is '{self._number}' for grouping '{self._grouping}')\n"
+                         "- an incorrect value in the 'acronym' field in 'venues.py'"
+                         " or a combination of 'type' and 'acronym' that doesn't exist.\n"
+                         f"Current values: {self._mds_config}.\n"
+                         "Please check your configuration and make sure the values match the data on dblp.org.\n"
+                         "See 'https://github.com/serqco/retrievelit#adding-a-venue' for more information.")
             raise SystemExit()
 
         logger.debug('Metadata received.')
