@@ -41,6 +41,7 @@ def create_parser() -> argparse.ArgumentParser:
     metadata_options = ['dblp', 'crossref']
     parser.add_argument('--metadata', choices=metadata_options, default='dblp', help="the source for metadata and DOIs of the venue. (default: %(default)s)")
     parser.add_argument('--ieeecs', action='store_true', help="rewrite DOIs pointing to ieeexplore to computer.org instead. (default: %(default)s)")
+    parser.add_argument('--longname', action='store_true', help="add the first non-particle word of the publication title to it's name. (default: %(default)s)")
     return parser
 
 def get_venue(target: str) -> tg.Dict:
@@ -85,6 +86,7 @@ def main() -> None:
     do_doi_rewrite = args.ieeecs
     grouping = args.grouping
     mapper_name = args.mapper
+    append_keyword = args.longname
 
     target_dir = Path(target)
     metadata_dir = Path.joinpath(target_dir, 'metadata')
@@ -107,7 +109,7 @@ def main() -> None:
         pipeline = downloader_pipeline.DownloaderPipeline(metadata_file)
         metadata_downloader = dblp_downloader.DblpDownloader(metadata_file, venue, number, grouping)
         pipeline.add_step(metadata_downloader)
-        name_generator_ = name_generator.NameGenerator(metadata_file, existing_folders, append_keyword=False)
+        name_generator_ = name_generator.NameGenerator(metadata_file, existing_folders, append_keyword)
         pipeline.add_step(name_generator_)
         bibtex_builder_ = bibtex_builder.BibtexBuilder(metadata_file, bibtex_file)
         pipeline.add_step(bibtex_builder_)
