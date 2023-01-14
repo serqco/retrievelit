@@ -24,11 +24,11 @@ class NameGenerator(PipelineStep):
         self._stopwords: tg.List = []
         self._metadata: tg.List = []
     
-    # TODO look for .txt file in relation to current file instead of working dir
     def _load_stopwords(self) -> None:
         """Load the stopwords from the file and store them in self._stopwords."""
         logger.debug('Loading stopwords.')
-        with open('stopwords.txt', 'r') as f:
+        file_path = Path(__file__).with_name('stopwords.txt')
+        with open(file_path, 'r') as f:
             stopwords_string = f.read()
         self._stopwords = stopwords_string.split('\n')
         logger.debug(f'Loaded stopwords {self._stopwords}.')
