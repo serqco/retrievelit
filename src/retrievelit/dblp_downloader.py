@@ -65,7 +65,8 @@ class DblpDownloader(PipelineStep):
                                'If you are downloading entries older than ~15 years, please download a specific volume instead.')
                 break
             entries.extend(hits['hit'])
-            if received >= total:
+            older_year_reached = entries[-1]['info']['year'] < self._number  # entries arrive youngest first
+            if received >= total or older_year_reached:
                 logger.debug(f"Received all entries.")
                 break
             logger.debug(f"{total - received} entries left. Getting next batch.")
