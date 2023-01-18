@@ -58,10 +58,10 @@ def parse_target(target: str) -> tg.Tuple[tg.Mapping, str]:
     return venues.VENUES[venuename], number
 
 
-def main() -> None:
+def main(argv: tg.List[str]) -> None:
     """Run the downloader."""
     parser = create_parser()
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
     logger.debug(f'Configuration: {vars(args)}')
 
     target = args.target
@@ -109,4 +109,4 @@ def main() -> None:
 
 
 if __name__ == '__main__':
-    main()
+    main(sys.argv[1:])
