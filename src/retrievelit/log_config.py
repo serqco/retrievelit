@@ -49,4 +49,6 @@ LOGGING_CONFIG = {
     },
 }
 
-logging.config.dictConfig(LOGGING_CONFIG)
+
+def setup():
+    logging.config.dictConfig(LOGGING_CONFIG)

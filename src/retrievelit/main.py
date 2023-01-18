@@ -22,7 +22,9 @@ from retrievelit.doi_pdf_mappers.abstract_resolved_doi_mapper import ResolvedDoi
 # disable logging from urllib3 library (used by requests)
 logging.getLogger('urllib3').setLevel(logging.ERROR)
 
+log_config.setup()
 logger = logging.getLogger(__name__)
+
 
 def create_parser() -> argparse.ArgumentParser:
     """Set up and return the parser for passed arguments."""
