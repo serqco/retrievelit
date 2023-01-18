@@ -30,30 +30,37 @@ To work on this package you have to install it in editable mode. This will allow
 
 ## How to use it
 ```bash
-retrievelit [-h] [--grouping {year,volume}] [--mapper MAPPER] [--metadata {dblp,crossref}] [--ieeecs] [--longname] target [existing_folders ...]
+retrievelit [-h] [--grouping {year,volume}] [--mapper MAPPER] [--metadata {dblp,crossref}] [--longname] target [existing_folders ...]
 ```
 Call it with `-h` yourself to see an up-to-date description of the options.
 
 ### Example
 ```bash
-retrievelit --grouping=volume --mapper=Springer EMSE-35 EMSE-34 EMSE-33
+retrievelit --grouping=volume --mapper=Springer EMSE-25 EMSE-24 EMSE-23
 ```
-This will download the Volume 35 of `Empirical Software Engineering` and use class `SpringerMapper` to generate the PDF URLs.
-The downloader will consider existing filenames in the folders `./EMSE-34` and `./EMSE-33` to avoid name conflicts. 
-The downloaded PDFs will be stored in a new folder `./EMSE-35`.
-In the folder `./EMSE-35/metadata` the following files will be created:
-- `EMSE-16-dblp.json`.
+This will download Volume 25 (which is the volume of the year 2020) of `Empirical Software Engineering` 
+and use class `SpringerMapper` to map DOIs to PDF URLs.
+The downloader will consider existing filenames in the folders `./EMSE-34` and `./EMSE-33` and will avoid name duplicates. 
+The downloaded PDFs will be stored in a new folder `./EMSE-25`.
+In the folder `./EMSE-25/metadata` the following files will be created:
+- `EMSE-25-dblp.json`.
   - Contains the corpus metadata as well as information about the downloader run such as the run configuration and the current state in a JSON object.
-- `EMSE-16-dblp.bib`.
+- `EMSE-25-dblp.bib`.
   - Contains the corpus metadata in the BibTeX format.
-- `EMSE-16-dblp.list`.
-  - Contains the local path from the working directory to each downloaded PDF file in the target folder.
+- `EMSE-25-dblp.list`.
+  - Contains one filepath per line for each of the PDFs.
+
+Result directories are always created in the working directory.  
+For retrieving by year, use `--grouping=year`, which is also the default.  
+Some conferences will need `--grouping=volume` although the number supplied is a year.  
+DBLP is the only metadata source so far; `--metadata=crossref` is not yet implemented.  
+The meaning of 'EMSE' and the other venue names are defined in `venues.py`.  
 
 ### Notes
 
 #### Downloading ICSE Technical Track with dblp.org
 - Due to limitations of the dblp publication API, downloading the Technical Track of ICSE is only possible when using the option `--grouping=volume` and supplying the publication year as the volume number.
-- Example to download the technical track of ICSE 2021: `retrievelit --grouping=volume --mapper=ComputerOrgConf --ieeecs ICSE-2021`
+- Example to download the technical track of ICSE 2021: `retrievelit --grouping=volume --mapper=ComputerOrgConf ICSE-2021`
 - All downloads of ICSE using `--grouping=year` will be mapped to `--grouping=volume` while keeping all other options the same.
 
 #### Downloading Elsevier Publications
