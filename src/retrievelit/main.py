@@ -1,6 +1,6 @@
 import argparse
 import logging
-import os
+import re
 import sys
 import typing as tg
 from pathlib import Path
@@ -46,22 +46,21 @@ def create_parser() -> argparse.ArgumentParser:
     parser.add_argument('--longname', action='store_true', help="add the first non-particle word of the publication title to it's name. (default: %(default)s)")
     return parser
 
-def get_venue(target: str) -> tg.Dict:
-    """Return the specified venue data, if it exists."""
-    venue_string = target.split('-')[0]
-    logger.debug(f'Target venue-string {venue_string} read from input.')
-    try:
-        venue = venues.VENUES[venue_string]
-    except KeyError:
-        logger.error(f"No venue found matching {venue_string}. Please check your spelling or edit 'venues.py' if it should exist.")
-        raise SystemExit()
-    return venue
 
-def get_number(target: str) -> str:
-    """Return the number part of the target string."""
-    value = target.split('-')[1]
-    logger.debug(f'Target year or volume {value} read from input.')
-    return value
+def parse_target(target: str) -> tg.Tuple[tg.Mapping, str]:
+    target_regexp = r"(.+)-(\d+)"
+    mm = re.fullmatch(target_regexp, target)
+    if not mm:
+        logger.error("Malformed target specification: '%s'.\nUse format %s, e.g. %s" %
+                     (target, "<venuename>-<number>", "ICSE-2024"))
+        raise SystemExit
+    venuename, number = mm.group(1), mm.group(2)
+    if not venuename in venues.VENUES:
+        logger.error("Unknown venue '%s'.\nKnown venues are: %s.\nExtend %s.py to add your own." %
+                     (venuename, list(venues.VENUES), venues.__name__))
+        raise SystemExit()
+    return venues.VENUES[venuename], number
+
 
 def is_doi_resolving_needed(mapper: tg.Union[DoiMapper, ResolvedDoiMapper]) -> bool:
     """Check if the chosen mapper requires its DOIs to be resolved."""
@@ -97,8 +96,7 @@ def main() -> None:
     list_file = Path.joinpath(metadata_dir, f'{target}-{metadata_source}.list')
 
     try:
-        venue = get_venue(target)
-        number = get_number(target)
+        venue, number = parse_target(target)
         
         mapper = mapper_factory.get_mapper(mapper_name)
         resolve_dois = is_doi_resolving_needed(mapper)
