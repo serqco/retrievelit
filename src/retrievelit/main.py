@@ -13,11 +13,8 @@ from retrievelit import bibtex_builder
 from retrievelit import dblp_downloader
 from retrievelit import name_generator
 from retrievelit import pdf_downloader
-from retrievelit import doi_resolver
 from retrievelit import venues
 
-from retrievelit.doi_pdf_mappers.abstract_doi_mapper import DoiMapper
-from retrievelit.doi_pdf_mappers.abstract_resolved_doi_mapper import ResolvedDoiMapper
 
 # disable logging from urllib3 library (used by requests)
 logging.getLogger('urllib3').setLevel(logging.ERROR)
@@ -42,7 +39,6 @@ def create_parser() -> argparse.ArgumentParser:
                               "See README.md on how to implement your own.")),
     metadata_options = ['dblp', 'crossref']
     parser.add_argument('--metadata', choices=metadata_options, default='dblp', help="the source for metadata and DOIs of the venue. (default: %(default)s)")
-    parser.add_argument('--ieeecs', action='store_true', help="rewrite DOIs pointing to ieeexplore to computer.org instead. (default: %(default)s)")
     parser.add_argument('--longname', action='store_true', help="add the first non-particle word of the publication title to it's name. (default: %(default)s)")
     return parser
 
@@ -62,19 +58,6 @@ def parse_target(target: str) -> tg.Tuple[tg.Mapping, str]:
     return venues.VENUES[venuename], number
 
 
-def is_doi_resolving_needed(mapper: tg.Union[DoiMapper, ResolvedDoiMapper]) -> bool:
-    """Check if the chosen mapper requires its DOIs to be resolved."""
-    if type(mapper).__base__ == DoiMapper:
-        logger.debug(f"Mapper {mapper} uses pure DOIs. DOI resolving will not be run.")
-        return False
-    elif type(mapper).__base__ == ResolvedDoiMapper:
-        logger.debug(f"Mapper {mapper} uses resolved DOIs. Resolving will be run.")
-        return True
-    else:
-        logger.error(f"Class {type(mapper)} doesn't inherit from DoiMapper, nor ResolvedDoiMapper.")
-        raise SystemExit()
-
-
 def main() -> None:
     """Run the downloader."""
     parser = create_parser()
@@ -84,7 +67,6 @@ def main() -> None:
     target = args.target
     metadata_source = args.metadata
     existing_folders = args.existing_folders
-    do_doi_rewrite = args.ieeecs
     grouping = args.grouping
     mapper_name = args.mapper
     append_keyword = args.longname
@@ -99,7 +81,6 @@ def main() -> None:
         venue, number = parse_target(target)
         
         mapper = mapper_factory.get_mapper(mapper_name)
-        resolve_dois = is_doi_resolving_needed(mapper)
         
         # setup folder and state file
         setup = setup_files.Setup(metadata_dir, metadata_file, vars(args))
@@ -113,10 +94,7 @@ def main() -> None:
         pipeline.add_step(name_generator_)
         bibtex_builder_ = bibtex_builder.BibtexBuilder(metadata_file, bibtex_file)
         pipeline.add_step(bibtex_builder_)
-        if resolve_dois:
-            doi_resolver_ = doi_resolver.DoiResolver(metadata_file, do_doi_rewrite)
-            pipeline.add_step(doi_resolver_)
-        pdf_downloader_ = pdf_downloader.PdfDownloader(metadata_file, mapper, target_dir, list_file, resolve_dois)
+        pdf_downloader_ = pdf_downloader.PdfDownloader(metadata_file, mapper, target_dir, list_file)
         pipeline.add_step(pdf_downloader_)
         
         pipeline.run()

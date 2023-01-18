@@ -8,8 +8,7 @@ from tqdm import tqdm
 
 from retrievelit import utils
 from retrievelit.exceptions import PdfUrlNotFoundError
-from retrievelit.doi_pdf_mappers.abstract_doi_mapper import DoiMapper
-from retrievelit.doi_pdf_mappers.abstract_resolved_doi_mapper import ResolvedDoiMapper
+from retrievelit.doi_pdf_mappers.base import DoiMapper
 from retrievelit.doi_pdf_mappers.elsevier import ElsevierMapper
 from retrievelit.pipeline_step import PipelineStep
 
@@ -20,13 +19,12 @@ logger = logging.getLogger(__name__)
 
 class PdfDownloader(PipelineStep):
     """Download the article PDFs and write the filepath to the list file."""
-    def __init__(self, metadata_file: Path, doi_pdf_mapper: tg.Union[DoiMapper, ResolvedDoiMapper], 
-                 target_dir: Path, list_file: Path, dois_resolved: bool) -> None:
+    def __init__(self, metadata_file: Path, doi_pdf_mapper: DoiMapper, 
+                 target_dir: Path, list_file: Path) -> None:
         self._metadata_file = metadata_file
         self._mapper = doi_pdf_mapper
         self._target_dir = target_dir
         self._list_file = list_file
-        self._dois_resolved = dois_resolved
         self._metadata: tg.List = []
         self._use_webbrowser = self._webbrowser_required()
 
@@ -110,9 +108,9 @@ class PdfDownloader(PipelineStep):
                 continue
 
             # get doi parameter from entry
-            doi_parameter = entry.get('resolved_doi') if self._dois_resolved else entry.get('doi')
+            doi_parameter = entry.get('doi')
             if not doi_parameter:
-                logger.warning(f"No {'resolved ' if self._dois_resolved else ''}DOI provided in entry {entry}. Skipping.")
+                logger.warning(f"No DOI provided in entry {entry}. Skipping.")
                 continue
             
             # get pdf url from mapper
@@ -120,7 +118,7 @@ class PdfDownloader(PipelineStep):
                 pdf_url = self._mapper.get_pdf_url(doi_parameter)
             except PdfUrlNotFoundError as e:
                 logger.warning(repr(e))
-                logger.warning(f"No pdf URL found for [resolved] DOI {doi_parameter}. Skipping. If this reoccurs, check if you have access to this publication.")
+                logger.warning(f"No pdf URL found for DOI {doi_parameter}. Skipping. If this reoccurs, check if you have access to this publication.")
                 continue
             
             # generate filename

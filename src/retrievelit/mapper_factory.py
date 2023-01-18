@@ -2,12 +2,11 @@ import logging
 import typing as tg
 
 from retrievelit.doi_pdf_mappers import *  # make sure all mappers have been loaded
-from retrievelit.doi_pdf_mappers import abstract_doi_mapper, abstract_resolved_doi_mapper
+import retrievelit.doi_pdf_mappers.base
 
 logger = logging.getLogger(__name__)
 
-def get_mapper(name: str) -> tg.Union[abstract_doi_mapper.DoiMapper,
-                                      abstract_resolved_doi_mapper.ResolvedDoiMapper]:
+def get_mapper(name: str) -> retrievelit.doi_pdf_mappers.base.DoiMapper:
     """Return an instance of the mapper class specified in `name`, if possible."""
     logger.debug('Trying to find mapper class for provided mapper name.')
     # all classes in that folder which implement the Mapper ABC.
@@ -23,8 +22,7 @@ def get_mapper(name: str) -> tg.Union[abstract_doi_mapper.DoiMapper,
 
 def mapper_classes() -> tg.Sequence[tg.Type]:
     """Return all subclasses of DoiMapper and ResolvedDoiMapper."""
-    return (abstract_doi_mapper.DoiMapper.__subclasses__() +
-            abstract_resolved_doi_mapper.ResolvedDoiMapper.__subclasses__())
+    return retrievelit.doi_pdf_mappers.base.DoiMapper.__subclasses__()
 
 
 def mapper_names() -> tg.Sequence[str]:

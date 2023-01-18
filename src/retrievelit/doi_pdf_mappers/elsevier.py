@@ -1,11 +1,11 @@
 import logging
 
-from retrievelit.doi_pdf_mappers.abstract_resolved_doi_mapper import ResolvedDoiMapper
+from retrievelit.doi_pdf_mappers.base import DoiMapper
 from retrievelit.exceptions import PdfUrlNotFoundError
 
 logger = logging.getLogger(__name__)
 
-class ElsevierMapper(ResolvedDoiMapper):
+class ElsevierMapper(DoiMapper):
     """Get the PDF download URL for DOIs resolving to sciencedirect domains (Elsevier)."""
     def get_pdf_url(self, resolved_doi: str) -> str:
         logger.debug(f'get_pdf_url({resolved_doi})')
