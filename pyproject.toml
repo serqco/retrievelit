@@ -41,3 +41,4 @@ retrievelit = "retrievelit.main:main"
 markers = [
     "ip_restricted: Requires an IP with access to the Journal PDFs"
 ]
+pythonpath = ["src", "tests"]
