@@ -1,6 +1,5 @@
 import argparse
 import logging
-import os
 import re
 import sys
 import typing as tg
@@ -74,46 +73,31 @@ def main(argv: tg.List[str]) -> None:
     args = parser.parse_args(argv)
     logger.debug(f'Configuration: {vars(args)}')
 
-    target = args.target
-    existing_folders = args.existing_folders
-    grouping = args.grouping
-    mapper_name = args.mapper
-    metadata_source = args.metadata
-    samplesize = args.sample
-    maxwait = args.maxwait
-    downloaddir = args.downloaddir
-    append_keyword = args.longname
-
-    target_dir = Path(target)
+    target_dir = Path(args.target)
     metadata_dir = Path.joinpath(target_dir, 'metadata')
-    metadata_file = Path.joinpath(metadata_dir, f'{target}-{metadata_source}.json')
-    bibtex_file = Path.joinpath(metadata_dir, f'{target}-{metadata_source}.bib')
-    list_file = Path.joinpath(metadata_dir, f'{target}-{metadata_source}.list')
+    basename = f"{args.target}-{args.metadata}"
+    metadata_file = Path.joinpath(metadata_dir, f'{basename}.json')
+    bibtex_file = Path.joinpath(metadata_dir, f'{basename}.bib')
+    list_file = Path.joinpath(metadata_dir, f'{basename}.list')
 
     try:
-        venue, number = parse_target(target)
-        
-        mapper = mapper_factory.get_mapper(mapper_name)
-        
-        # setup folder and state file
+        venue, number = parse_target(args.target)
+        mapperclass = mapper_factory.get_mapper(args.mapper)
         setup = setup_files.Setup(metadata_dir, metadata_file, vars(args))
         setup.run()
-        
-        # create pipeline with all downloader steps
+        # --- create pipeline with all downloader steps:
         pipeline = downloader_pipeline.DownloaderPipeline(metadata_file)
-        metadata_downloader = dblp_downloader.DblpDownloader(metadata_file, venue, number, grouping,
-                                                             mapper)
+        metadata_downloader = dblp_downloader.DblpDownloader(metadata_file, venue, number, 
+                                                             args.grouping, mapperclass)
         pipeline.add_step(metadata_downloader)
-        name_generator_ = name_generator.NameGenerator(metadata_file, existing_folders, append_keyword)
+        name_generator_ = name_generator.NameGenerator(metadata_file, args.existing_folders, args.longname)
         pipeline.add_step(name_generator_)
         bibtex_builder_ = bibtex_builder.BibtexBuilder(metadata_file, bibtex_file)
         pipeline.add_step(bibtex_builder_)
-        pdf_downloader_ = pdf_downloader.PdfDownloader(metadata_file, mapper, target_dir, list_file,
-                                                       samplesize, maxwait, downloaddir)
+        pdf_downloader_ = pdf_downloader.PdfDownloader(metadata_file, mapperclass, target_dir, list_file,
+                                                       args.samplesize, args.maxwait, args.downloaddir)
         pipeline.add_step(pdf_downloader_)
-        
         pipeline.run()
-        
         logger.info('Exiting.')
     except SystemExit:
         logger.info('Exiting!')
