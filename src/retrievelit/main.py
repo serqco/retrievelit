@@ -38,8 +38,12 @@ def create_parser() -> argparse.ArgumentParser:
                         help=("the doi_pdf_mappers class to use for retrieving the PDF URL from the DOI of a publication. "
                               "See README.md on how to implement your own.")),
     metadata_options = ['dblp', 'crossref']
-    parser.add_argument('--metadata', choices=metadata_options, default='dblp', help="the source for metadata and DOIs of the venue. (default: %(default)s)")
-    parser.add_argument('--longname', action='store_true', help="add the first non-particle word of the publication title to it's name. (default: %(default)s)")
+    parser.add_argument('--metadata', choices=metadata_options, default='dblp', 
+                        help="the source for metadata and DOIs of the venue. (default: %(default)s)")
+    parser.add_argument('--sample', action='store', type=int, metavar='N',
+                        help="number of randomly sampled articles to retrieve the PDF for. (default: all)")
+    parser.add_argument('--longname', action='store_true', 
+                        help="add the first non-particle word of the publication title to it's name. (default: %(default)s)")
     return parser
 
 
@@ -65,10 +69,11 @@ def main(argv: tg.List[str]) -> None:
     logger.debug(f'Configuration: {vars(args)}')
 
     target = args.target
-    metadata_source = args.metadata
     existing_folders = args.existing_folders
     grouping = args.grouping
     mapper_name = args.mapper
+    metadata_source = args.metadata
+    samplesize = args.sample
     append_keyword = args.longname
 
     target_dir = Path(target)
@@ -94,7 +99,8 @@ def main(argv: tg.List[str]) -> None:
         pipeline.add_step(name_generator_)
         bibtex_builder_ = bibtex_builder.BibtexBuilder(metadata_file, bibtex_file)
         pipeline.add_step(bibtex_builder_)
-        pdf_downloader_ = pdf_downloader.PdfDownloader(metadata_file, mapper, target_dir, list_file)
+        pdf_downloader_ = pdf_downloader.PdfDownloader(metadata_file, mapper, target_dir, list_file,
+                                                       samplesize)
         pipeline.add_step(pdf_downloader_)
         
         pipeline.run()

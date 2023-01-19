@@ -1,4 +1,5 @@
 import logging
+import random
 import time
 import typing as tg
 import webbrowser
@@ -20,13 +21,21 @@ logger = logging.getLogger(__name__)
 class PdfDownloader(PipelineStep):
     """Download the article PDFs and write the filepath to the list file."""
     def __init__(self, metadata_file: Path, doi_pdf_mapper: DoiMapper, 
-                 target_dir: Path, list_file: Path) -> None:
+                 target_dir: Path, list_file: Path, samplesize: tg.Optional[int]) -> None:
         self._metadata_file = metadata_file
         self._mapper = doi_pdf_mapper
         self._target_dir = target_dir
         self._list_file = list_file
+        self._samplesize = samplesize
         self._metadata: tg.List = []
         self._use_webbrowser = self._webbrowser_required()
+
+    def _get_sample(self, samplesize: tg.Optional[int], metadata: tg.Mapping[str, tg.Any]) -> tg.Mapping[str, tg.Any]:
+        if samplesize is None:
+            return metadata  # no sampling, use all data (the default case)
+        if samplesize == 0:
+            return dict()  # empty sample
+        return random.sample(population=metadata, k=min(samplesize, len(metadata)))
 
     def _webbrowser_required(self) -> bool:
         """Check if the target requires download through webbrowser, based on the selected mapper."""
@@ -101,7 +110,7 @@ class PdfDownloader(PipelineStep):
 
         logger.info('Starting PDF download. This may take a few seconds per PDF.')
 
-        for entry in tqdm(self._metadata):
+        for entry in tqdm(self._get_sample(self._samplesize, self._metadata)):
 
             if entry.get('pdf'):
                 logger.debug(f'PDF already downloaded for entry {entry}. Skipping.')
