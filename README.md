@@ -111,10 +111,27 @@ The meaning of 'EMSE' and the other venue names are defined in `venues.py`.
 ```
 
 ### Creating a new PDF URL mapper
-A (doi-to-pdf-url) mapper is an object which implements the `get_pdf_url` method, which takes a (resolved) DOI and returns the URL of the matching PDF for the downloader.
+A (doi-to-pdf-url) mapper is an object which implements the `get_pdf_url` method, 
+which takes a DOI and returns the URL of the matching PDF for the downloader.
+It can potentially also implement the `get_pdfdescriptor` method, which returns a pair of
+such a PDF URL and a PDF filename. 
+
 #### Why
-- Adding a new mapper is necessary when you added a new venue from a new publisher or with a different URL schema.
-- You might also want to change existing mappers if their tests fail or you notice incorrect return values.
+Adding a new mapper is necessary when you added a new venue from a new publisher or with a different URL schema.
+
+Why the two different types of mappers?
+If the `get_pdfdescriptor` method exists, the PDFs will not be retrieved by direct GET requests,
+but rather the retrieval will be delegated to the browser, which (if it is configured correctly)
+will place the PDF in its download folder, where retrievelit will pick it up under the given filename.
+
+This process is more suitable if the publisher's server is robot averse.
+Direct GET requests are more robust and stable from a purely technical point of view,
+however, the browser-based approach is more stable in practice, because some publishers
+(e.g. Elsevier) will not let you download with direct GET requests at all and others
+(e.g. ACM) will quickly block your IP if you do this more than a very few times. 
+Beware!
+
+
 #### How
 - All mappers are located in the `doi_pdf_mappers` folder in the base directory.
 - For simplicity, create a new file for each mapper. The filename is irrelevant to the program, though it should be as clear as possible for other users.
@@ -143,16 +160,11 @@ A (doi-to-pdf-url) mapper is an object which implements the `get_pdf_url` method
 
 ## TODO
 - functionality:
-  - add option to download different ICSE Tracks
-  - add timestamps of metadata retrieval, pdf download, etc. to metadata file if needed
-- usability improvements:
-  - use request sessions to reduce time for consecutive requests to the same server
+  - how to download different ICSE tracks?
+  - add timestamps of metadata retrieval, pdf download, etc. to metadata file?
 - tech debt reductions:
+  - remove most logger.debug() calls
 - defects:
 - documentation:
 - quality assurance:
-  - add test suite
-  - GitHub Continuous Integration
-  - perhaps add compatibility testing with tox (and tox-docker or so)  
-
-and more.
+  - add a system test  (a CI is too difficult)
