@@ -78,7 +78,7 @@ class PdfDownloader(PipelineStep):
             logger.debug(f"Size of file {str(file)}: old: {size_old}, new: {size_new}.")
             return size_old == size_new
 
-        pdf_file = Path.joinpath(download_dir, pdfdescriptor.filename)
+        pdf_file = Path(download_dir, pdfdescriptor.filename)
         
         logger.debug(f"Opening {pdfdescriptor.download_url} in browser.")
         webbrowser.open(pdfdescriptor.download_url, 0)
@@ -88,7 +88,7 @@ class PdfDownloader(PipelineStep):
             time.sleep(2)
 
         logger.debug(f"Finished downloading file {pdf_file}.")
-        new_path = Path.joinpath(Path(), pdf_targetfilename)
+        new_path = Path(Path(), pdf_targetfilename)
         logger.debug(f"Moving and renaming file to {new_path}.")
         pdf_file.rename(new_path)
         
@@ -131,7 +131,7 @@ class PdfDownloader(PipelineStep):
             if not entry.get('identifier'):
                 logger.warning(f'No identifier found in entry {entry}. Skipping.')
                 continue
-            pdf_path = Path.joinpath(self._target_dir, f"{entry.get('identifier')}.pdf")
+            pdf_path = Path(self._target_dir, f"{entry.get('identifier')}.pdf")
             
             if self._use_webbrowser:
                 self._download_pdf_with_webbrowser(pdfdescriptor, pdf_path, self._downloaddir)

@@ -75,11 +75,11 @@ def main() -> None:
     logger.debug(f'Configuration: {vars(args)}')
 
     target_dir = Path(args.target)
-    metadata_dir = Path.joinpath(target_dir, 'metadata')
+    metadata_dir = Path(target_dir, 'metadata')
     basename = f"{args.target}-{args.metadata}"
-    metadata_file = Path.joinpath(metadata_dir, f'{basename}.json')
-    bibtex_file = Path.joinpath(metadata_dir, f'{basename}.bib')
-    list_file = Path.joinpath(metadata_dir, f'{basename}.list')
+    metadata_file = Path(metadata_dir, f'{basename}.json')
+    bibtex_file = Path(metadata_dir, f'{basename}.bib')
+    list_file = Path(metadata_dir, f'{basename}.list')
 
     try:
         venue, number = parse_target(args.target)
@@ -96,7 +96,7 @@ def main() -> None:
         bibtex_builder_ = bibtex_builder.BibtexBuilder(metadata_file, bibtex_file)
         pipeline.add_step(bibtex_builder_)
         pdf_downloader_ = pdf_downloader.PdfDownloader(metadata_file, mapperclass, target_dir, list_file,
-                                                       args.samplesize, args.maxwait, args.downloaddir)
+                                                       args.sample, args.maxwait, args.downloaddir)
         pipeline.add_step(pdf_downloader_)
         pipeline.run()
         logger.info('Exiting.')
