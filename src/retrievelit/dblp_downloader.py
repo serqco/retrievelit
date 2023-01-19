@@ -6,6 +6,7 @@ from pathlib import Path
 import requests
 
 from retrievelit import utils
+from retrievelit.doi_pdf_mappers.base import DoiMapper
 from retrievelit.pipeline_step import PipelineStep
 from retrievelit.exceptions import NoEntriesReceivedError
 
@@ -16,11 +17,13 @@ API_BASE_URL = 'https://dblp.org/search/publ/api?q='
 
 class DblpDownloader(PipelineStep):
     """Download metadata for a target from dblp.org and store it in a uniform format."""
-    def __init__(self, metadata_file: Path, venue: tg.Mapping, number: str, grouping: str) -> None:
+    def __init__(self, metadata_file: Path, venue: tg.Mapping, number: str, grouping: str,
+                 mapper: DoiMapper):
         self._metadata_file = metadata_file
         self._venue = venue
         self._number = number
         self._grouping = grouping
+        self._mapper = mapper
         # mds = metadata-source
         self._mds_config: tg.Dict = {}
 
@@ -123,7 +126,10 @@ class DblpDownloader(PipelineStep):
             entry['doi'] = entry['doi'].lower()
             entry['venue'] = self._venue['name']
             entry['venue_type'] = self._venue['type']
-            
+            descriptor = self._mapper.get_pdfdescriptor(entry['doi'])
+            entry['pdf_url'] = descriptor.download_url
+            entry['pdf_filename'] = descriptor.filename
+
             # create list of author names
             authors = publication.get('authors')
             if not authors:

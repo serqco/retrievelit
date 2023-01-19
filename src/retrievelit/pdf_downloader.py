@@ -9,8 +9,7 @@ from tqdm import tqdm
 
 from retrievelit import utils
 from retrievelit.exceptions import PdfUrlNotFoundError
-from retrievelit.doi_pdf_mappers.base import DoiMapper
-from retrievelit.doi_pdf_mappers.elsevier import ElsevierMapper
+from retrievelit.doi_pdf_mappers.base import DoiMapper, PDFDescriptor
 from retrievelit.pipeline_step import PipelineStep
 
 # seconds to wait between get requests (ignoring code execution time inbetween)
@@ -39,11 +38,11 @@ class PdfDownloader(PipelineStep):
 
     def _webbrowser_required(self) -> bool:
         """Check if the target requires download through webbrowser, based on the selected mapper."""
-        if isinstance(self._mapper, ElsevierMapper):
-            logger.debug(f"Target requires download by the webbrowser module.")
+        if getattr(self._mapper, 'get_pdfdescriptor'):
+            logger.debug(f"Mapper suggests download by the webbrowser module.")
             return True
         else:
-            logger.debug(f"Target can be downloaded by requests.")
+            logger.debug(f"Target will be downloaded by direct GET requests.")
             return False
 
     def _get_pdf_data(self, pdf_url: str) -> bytes:
@@ -65,7 +64,7 @@ class PdfDownloader(PipelineStep):
         pdf_data = self._get_pdf_data(pdf_url)
         self._store_pdf(pdf_data, pdf_path)
     
-    def _download_pdf_with_webbrowser(self, pdf_url: str, pdf_path: Path,
+    def _download_pdf_with_webbrowser(self, pdfdescriptor: PDFDescriptor, pdf_targetfilename: Path,
                                       download_dir: Path) -> None:
         """Use the webbrowser module to download the PDF and store it in `filename`."""
         def is_download_finished(file: Path) -> bool:
@@ -76,20 +75,17 @@ class PdfDownloader(PipelineStep):
             logger.debug(f"Size of file {str(file)}: old: {size_old}, new: {size_new}.")
             return size_old == size_new
 
-        elsevier_id = pdf_url.split('/')[-2]
-        # filename of all IST (Elsevier) downloads from all tested browsers
-        download_filename = f'1-s2.0-{elsevier_id}-main.pdf'
-        pdf_file = Path.joinpath(download_dir, download_filename)
+        pdf_file = Path.joinpath(download_dir, pdfdescriptor.filename)
         
-        logger.debug(f"Opening {pdf_url} in browser.")
-        webbrowser.open(pdf_url, 0)
-        # keep this order and no parantheses to take advantage of lazy evaluation
+        logger.debug(f"Opening {pdfdescriptor.download_url} in browser.")
+        webbrowser.open(pdfdescriptor.download_url, 0)
+        # keep this order and no parantheses to take advantage of lazy evaluation:
         while not pdf_file.is_file() or not is_download_finished(pdf_file):
             logger.debug(f"Download of file {pdf_file} is not finished.")
             time.sleep(2)
 
         logger.debug(f"Finished downloading file {pdf_file}.")
-        new_path = Path.joinpath(Path(), pdf_path)
+        new_path = Path.joinpath(Path(), pdf_targetfilename)
         logger.debug(f"Moving and renaming file to {new_path}.")
         pdf_file.rename(new_path)
         
@@ -124,7 +120,10 @@ class PdfDownloader(PipelineStep):
             
             # get pdf url from mapper
             try:
-                pdf_url = self._mapper.get_pdf_url(doi_parameter)
+                if self._use_webbrowser:
+                    pdfdescriptor = self._mapper.get_pdfdescriptor(doi_parameter)
+                else:
+                    pdf_dl_url = self._mapper.get_pdf_url(doi_parameter)
             except PdfUrlNotFoundError as e:
                 logger.warning(repr(e))
                 logger.warning(f"No pdf URL found for DOI {doi_parameter}. Skipping. If this reoccurs, check if you have access to this publication.")
@@ -137,9 +136,9 @@ class PdfDownloader(PipelineStep):
             pdf_path = Path.joinpath(self._target_dir, f"{entry.get('identifier')}.pdf")
             
             if self._use_webbrowser:
-                self._download_pdf_with_webbrowser(pdf_url, pdf_path, download_dir)
+                self._download_pdf_with_webbrowser(pdfdescriptor, pdf_path, download_dir)
             else:
-                self._download_pdf_with_requests(pdf_url, pdf_path)
+                self._download_pdf_with_requests(pdf_dl_url, pdf_path)
             time.sleep(REQUEST_DELAY)
 
             # this might lead to duplicate entries in the .list file
@@ -148,7 +147,3 @@ class PdfDownloader(PipelineStep):
             self._add_to_list(pdf_path)
             entry['pdf'] = True
             utils.save_metadata(self._metadata_file, self._metadata)
-
-
-if __name__ == '__main__':
-    logger.error('Not a standalone file. Please run the main script instead.')

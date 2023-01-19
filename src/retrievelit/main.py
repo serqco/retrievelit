@@ -93,7 +93,8 @@ def main(argv: tg.List[str]) -> None:
         
         # create pipeline with all downloader steps
         pipeline = downloader_pipeline.DownloaderPipeline(metadata_file)
-        metadata_downloader = dblp_downloader.DblpDownloader(metadata_file, venue, number, grouping)
+        metadata_downloader = dblp_downloader.DblpDownloader(metadata_file, venue, number, grouping,
+                                                             mapper)
         pipeline.add_step(metadata_downloader)
         name_generator_ = name_generator.NameGenerator(metadata_file, existing_folders, append_keyword)
         pipeline.add_step(name_generator_)
