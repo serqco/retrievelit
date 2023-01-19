@@ -20,12 +20,13 @@ logger = logging.getLogger(__name__)
 class PdfDownloader(PipelineStep):
     """Download the article PDFs and write the filepath to the list file."""
     def __init__(self, metadata_file: Path, doi_pdf_mapper: DoiMapper, 
-                 target_dir: Path, list_file: Path, samplesize: tg.Optional[int]) -> None:
+                 target_dir: Path, list_file: Path, samplesize: tg.Optional[int], maxwait: int):
         self._metadata_file = metadata_file
         self._mapper = doi_pdf_mapper
         self._target_dir = target_dir
         self._list_file = list_file
         self._samplesize = samplesize
+        self._maxwait = max(4, maxwait)
         self._metadata: tg.List = []
         self._use_webbrowser = self._webbrowser_required()
 
@@ -139,7 +140,7 @@ class PdfDownloader(PipelineStep):
                 self._download_pdf_with_webbrowser(pdfdescriptor, pdf_path, download_dir)
             else:
                 self._download_pdf_with_requests(pdf_dl_url, pdf_path)
-            time.sleep(REQUEST_DELAY)
+            time.sleep(random.uniform(0.25*self._maxwait, self._maxwait))
 
             # this might lead to duplicate entries in the .list file
             # since it can get interrupted between appending to list file and saving the state
