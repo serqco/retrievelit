@@ -29,10 +29,22 @@ To work on this package you have to install it in editable mode. This will allow
 - Install the package in editable mode to link it to the local files by running `pip install -e .[tests]` in the root directory.
 
 ## How to use it
+
+1. Make sure your default webbrowser is configured to download PDFs (as opposed to showing them
+   in the browser or asking what to do).
+2. Visit the publisher's web page, confirm any cookie questions, log in (if needed).
+3. Now call `retrievelit` as described below.  
+   Depending on how your browser is configured with respect to using tabs, this may open a new tab
+   for each downloaded file. You may close older tabs (not the current one!) at any time.  
+   `retrievelit` assumes your browser places the downloads in directory `Downloads` in your
+   home directory. If that is not the case, supply the full path to the download directory
+   as `--downloaddir=/path/to/mydownloaddir` etc.
+
 ```bash
-retrievelit [-h] [--grouping {year,volume}] [--mapper MAPPER] [--metadata {dblp,crossref}] [--longname] target [existing_folders ...]
+retrievelit [-h] [--grouping {year,volume}] [--mapper MAPPER] [--sample N] target [existing_folders ...]
 ```
-Call it with `-h` yourself to see an up-to-date description of the options.
+There are more options than the above. Use `-h` to learn about them.
+We explain the use by example:
 
 ### Example
 ```bash
@@ -51,8 +63,13 @@ In the folder `./EMSE-25/metadata` the following files will be created:
   - Contains one filepath per line for each of the PDFs.
 
 Result directories are always created in the working directory.  
-For retrieving by year, use `--grouping=year`, which is also the default.  
+For retrieving by year, use `--grouping=year`, which is also the default (so there is no need to actually use it).    
 Some conferences will need `--grouping=volume` although the number supplied is a year.  
+Use something like `--sample=50` if you want to download only 50 randomly chosen articles instead of
+the entire volume. Use `--sample=1` for testing whether a download works at all; delete the resulting
+directory before the next try.  
+If `retrievelit` hangs during PDF download, this may be because it is expecting the files to appear
+in a different place than they actually do. Use `--downloaddir=...` to fix this.  
 DBLP is the only metadata source so far; `--metadata=crossref` is not yet implemented.  
 The meaning of 'EMSE' and the other venue names are defined in `venues.py`.  
 
@@ -63,10 +80,6 @@ The meaning of 'EMSE' and the other venue names are defined in `venues.py`.
 - Example to download the technical track of ICSE 2021: `retrievelit --grouping=volume --mapper=ComputerOrgConf ICSE-2021`
 - All downloads of ICSE using `--grouping=year` will be mapped to `--grouping=volume` while keeping all other options the same.
 
-#### Downloading Elsevier Publications
-- When using the Mapper `ElsevierMapper` to download Journals published by Elsevier, such as IST (Information and Software Technology), the downloader will use the default webbrowser of the system to get the PDF.
-- For this to work, it is assumed that your browser downloads are located in the `Downloads` folder inside your home directory. If this is not the case, change the variable `download_dir` in the class `PdfDownloader` to include the correct path to your downloads.
-- Note that the downloader is unable to close the new browser windows after getting the PDFs, so you will have to close them manually after a successful run.
 ## How to extend it
 
 ### Adding a venue
