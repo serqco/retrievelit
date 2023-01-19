@@ -1,5 +1,6 @@
 import argparse
 import logging
+import os
 import re
 import sys
 import typing as tg
@@ -44,6 +45,9 @@ def create_parser() -> argparse.ArgumentParser:
                         help="number of randomly sampled articles to retrieve the PDF for. (default: all)")
     parser.add_argument('--maxwait', action='store', type=int, metavar='N', default=20,
                         help="will wait between 0.25 N and N seconds after each download. (default: %(default)s")
+    parser.add_argument('--downloaddir', action='store', type=str, metavar='fullpath', 
+                        default=f"{Path.home()}/Downloads",
+                        help="will wait between 0.25 N and N seconds after each download. (default: %(default)s)")
     parser.add_argument('--longname', action='store_true', 
                         help="add the first non-particle word of the publication title to it's name. (default: %(default)s)")
     return parser
@@ -77,6 +81,7 @@ def main(argv: tg.List[str]) -> None:
     metadata_source = args.metadata
     samplesize = args.sample
     maxwait = args.maxwait
+    downloaddir = args.downloaddir
     append_keyword = args.longname
 
     target_dir = Path(target)
@@ -104,7 +109,7 @@ def main(argv: tg.List[str]) -> None:
         bibtex_builder_ = bibtex_builder.BibtexBuilder(metadata_file, bibtex_file)
         pipeline.add_step(bibtex_builder_)
         pdf_downloader_ = pdf_downloader.PdfDownloader(metadata_file, mapper, target_dir, list_file,
-                                                       samplesize, maxwait)
+                                                       samplesize, maxwait, downloaddir)
         pipeline.add_step(pdf_downloader_)
         
         pipeline.run()

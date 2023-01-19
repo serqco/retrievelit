@@ -20,13 +20,15 @@ logger = logging.getLogger(__name__)
 class PdfDownloader(PipelineStep):
     """Download the article PDFs and write the filepath to the list file."""
     def __init__(self, metadata_file: Path, doi_pdf_mapper: DoiMapper, 
-                 target_dir: Path, list_file: Path, samplesize: tg.Optional[int], maxwait: int):
+                 target_dir: Path, list_file: Path, 
+                 samplesize: tg.Optional[int], maxwait: int, downloaddir: str):
         self._metadata_file = metadata_file
         self._mapper = doi_pdf_mapper
         self._target_dir = target_dir
         self._list_file = list_file
         self._samplesize = samplesize
         self._maxwait = max(4, maxwait)
+        self._downloaddir = downloaddir
         self._metadata: tg.List = []
         self._use_webbrowser = self._webbrowser_required()
 
@@ -100,12 +102,7 @@ class PdfDownloader(PipelineStep):
         """Run the full PDF download process."""
         self._metadata = utils.load_metadata(self._metadata_file)
 
-        if self._use_webbrowser:
-            download_dir = Path.joinpath(Path.home(), 'Downloads')
-            logger.info(f"Assuming browser downloads in {str(download_dir)}."
-                        " If this is incorrect, please overwrite `download_dir` in `PdfDownloader` with the correct value.")
-
-        logger.info('Starting PDF download. This may take a few seconds per PDF.')
+        logger.info('Starting PDF download. This may take a while for each PDF.')
 
         for entry in tqdm(self._get_sample(self._samplesize, self._metadata)):
 
@@ -137,7 +134,7 @@ class PdfDownloader(PipelineStep):
             pdf_path = Path.joinpath(self._target_dir, f"{entry.get('identifier')}.pdf")
             
             if self._use_webbrowser:
-                self._download_pdf_with_webbrowser(pdfdescriptor, pdf_path, download_dir)
+                self._download_pdf_with_webbrowser(pdfdescriptor, pdf_path, self._downloaddir)
             else:
                 self._download_pdf_with_requests(pdf_dl_url, pdf_path)
             time.sleep(random.uniform(0.25*self._maxwait, self._maxwait))
