@@ -3,4 +3,3 @@ bibtexparser==1.3.0
 nltk==3.7
 requests==2.27.1
 tqdm==4.63.0
-pydoi==0.2.1
