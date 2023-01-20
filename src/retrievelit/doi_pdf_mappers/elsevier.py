@@ -11,7 +11,7 @@ class ElsevierMapper(DoiMapper):
     """Get the PDF download URL for DOIs resolving to sciencedirect domains (Elsevier)."""
     DL_LINK_BASE = "https://www.sciencedirect.com/science/article/pii"
 
-    def _elsevier_id_from_doi(self, doi):
+    def _elsevier_id_from_doi(self, doi: str) -> str:
         response = requests.head(f'https://doi.org/{doi}', allow_redirects=True)
         resolved_url = response.url
         elsevier_id = resolved_url.split('/')[-1]
