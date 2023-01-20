@@ -21,6 +21,6 @@ class ElsevierMapper(DoiMapper):
 
     def get_pdfdescriptor(self, doi: str) -> PDFDescriptor:
         pdf_dl_url = self.get_pdf_url(doi)
-        elsevier_id = pydoi.get_url(doi).split('/')[-1]  # part 2 of DOI is used in filename
+        elsevier_id = pydoi.get_url(doi).split('/')[-1]
         download_filename = f'1-s2.0-{elsevier_id}-main.pdf'
         return PDFDescriptor(pdf_dl_url, download_filename)
