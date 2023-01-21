@@ -48,7 +48,7 @@ class NameGenerator(PipelineStep):
         # we want to regenerate all names anyways.
         logger.debug('Loading existing names.')
         # TODO maybe pass both the folder paths as well as the target names from main, so we don't have the `metadata` folder name hardcoded here?
-        list_files = [Path(f'{folder}/metadata/{folder}.list') for folder in self._existing_folders]
+        list_files = [Path(f'{folder}/metadata/{folder}-dblp.list') for folder in self._existing_folders]
 
         for list_file in list_files:
             logger.debug(f'Reading names from file {list_file}')
