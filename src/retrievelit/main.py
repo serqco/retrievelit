@@ -79,7 +79,7 @@ def main() -> None:
     basename = f"{args.target}-{args.metadata}"
     metadata_file = Path(metadata_dir, f'{basename}.json')
     bibtex_file = Path(metadata_dir, f'{basename}.bib')
-    list_file = Path(metadata_dir, f'{basename}.list')
+    list_file = Path(metadata_dir, f'{args.target}.list')
 
     try:
         venue, number = parse_target(args.target)
